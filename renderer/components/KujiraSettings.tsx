@@ -14,6 +14,7 @@ const DEFAULTS = {
   ambilightIntensity: 0.55,
   stats: true,
   panel: true,
+  hudOpacity: 0.85,
   outputRes: "screen", // 'screen' | '1080p' | '1440p' | '4K'
   outputHz: "screen", // 'screen' | 60 | 90 | 120 | 144 | 180 | 240
 };
@@ -245,6 +246,18 @@ export default function KujiraSettings() {
             size="sm"
             isSelected={cfg.stats}
             onValueChange={(v) => update("stats", v)}
+          />
+        </Row>
+
+        <Row label="HUD 透明度">
+          <Slider
+            className="w-[180px]"
+            size="sm"
+            step={0.05}
+            minValue={0.3}
+            maxValue={1}
+            value={cfg.hudOpacity != null ? cfg.hudOpacity : 0.85}
+            onChange={(v) => update("hudOpacity", Number(v))}
           />
         </Row>
 

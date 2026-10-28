@@ -15,6 +15,7 @@
     ambilightIntensity: 0.55,
     stats: true,
     panel: true,
+    hudOpacity: 0.85,     // HUD text opacity 0.3..1
     scaler: 'auto',        // 'auto' | 'fsr' | 'rcas' | 'bilinear' — upscaler choice (vendor-aware auto)
     outputRes: 'screen',   // 'screen' | '1080p' | '1440p' | '4K' (long-edge supersample tiers)
     outputHz: 'screen',    // 'screen' | 60 | 90 | 120 | 144 | 180 | 240 (output refresh cap)
@@ -1228,9 +1229,15 @@ void main() {
     try {
       fx = new PostFX(canvas);
     } catch (e) {
-      hud.textContent = '[Kujira] WebGL2 失败: ' + e.message;
+      hud.textContent = '[Kujira] WebGL2 失败: ' + e.message + '（已直通原始视频）';
       return;
     }
+    canvas.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault();
+      cfg.enabled = false;
+      hud.textContent = '[Kujira] GPU 上下文丢失，已切换兼容模式（原始视频直通）';
+      log('webgl context lost');
+    });
 
     // ---------- source discovery ----------
     let srcEl = null, srcKind = null;
@@ -1315,6 +1322,7 @@ void main() {
     // ---------- render loop ----------
     let srcFpsCount = 0, outFpsCount = 0, renderMsSum = 0, renderMsN = 0;
     let rafCount = 0, screenHz = 60, outSeq = -1, lastOutPhase = -1;
+    let renderErrs = 0;
     let lastTestPush = 0;
     let lastStatAt = performance.now();
     let stats = { srcFps: 0, outFps: 0, renderMs: 0, gpuMs: 0, latencyMs: 0, mode: cfg.mode };
@@ -1364,7 +1372,19 @@ void main() {
           stats.latencyMs = Math.round(delay);
         }
       }
-      const ms = fx.render(opts);
+      let ms;
+      try {
+        ms = fx.render(opts);
+      } catch (err) {
+        renderErrs++;
+        if (renderErrs >= 30) {
+          cfg.enabled = false; saveCfg();
+          hud.textContent = '[Kujira] 渲染异常，已切换兼容模式（原始视频直通）';
+          log('render failover: ' + err);
+        }
+        return;
+      }
+      renderErrs = 0;
       renderMsSum += ms; renderMsN++; outFpsCount++;
       if (opts.sync) stats.gpuMs = +ms.toFixed(2); // renderMs with gl.finish() = real GPU time
 
@@ -1417,7 +1437,7 @@ void main() {
         <div class="row"><span>环境光</span><div class="seg" data-k="ambilight">
           <button data-v="true">开</button><button data-v="false">关</button></div></div>
         <div class="row"><span>光强</span><input type="range" min="0" max="1" step="0.05" data-k="ambilightIntensity"></div>
-        <div class="hint">⌥K 面板 | ⌥1/2/3 视图 | ⌥S 状态 | ⌥E 开关</div>
+        <div class="hint">⌥⌥K 面板 | ⌥1/2/3 视图 | ⌥S 状态 | ⌥E 开关 | ⌥P 截图</div>
       `;
       document.documentElement.appendChild(p);
 
@@ -1459,8 +1479,31 @@ void main() {
 
     function applyCfg() {
       hud.style.display = cfg.stats ? 'block' : 'none';
+      hud.style.opacity = String(cfg.hudOpacity != null ? cfg.hudOpacity : 0.85);
       if (panel) panel.style.display = cfg.panel ? 'block' : 'none';
       layout();
+    }
+
+    // ---------- screenshot (works even with postfx off) ----------
+    function screenshot() {
+      try {
+        const useFx = cfg.enabled && cfg.mode !== 'off' && canvas.style.display !== 'none';
+        const w = useFx ? canvas.width : (srcEl.videoWidth || srcEl.width || 1920);
+        const h = useFx ? canvas.height : (srcEl.videoHeight || srcEl.height || 1080);
+        const tmp = document.createElement('canvas');
+        tmp.width = w; tmp.height = h;
+        const c2 = tmp.getContext('2d');
+        c2.drawImage(useFx ? canvas : srcEl, 0, 0, w, h);
+        const a = document.createElement('a');
+        a.href = tmp.toDataURL('image/png');
+        a.download = 'kujira-' + new Date().toISOString().replace(/[:.]/g, '-') + '.png';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        log('screenshot: ' + a.download);
+      } catch (err) {
+        log('screenshot failed: ' + err);
+      }
     }
 
     const panel = buildPanel();
@@ -1475,6 +1518,7 @@ void main() {
       else if (k === '1') { cfg.viewMode = 'fit'; saveCfg(); e.preventDefault(); }
       else if (k === '2') { cfg.viewMode = 'fill'; saveCfg(); e.preventDefault(); }
       else if (k === '3') { cfg.viewMode = 'zoom'; saveCfg(); e.preventDefault(); }
+      else if (k === 'p') { screenshot(); e.preventDefault(); }
       else if (k === 'f') {
         const order = ['off', 'sharp', 'upscale', 'framegen'];
         cfg.mode = order[(order.indexOf(cfg.mode) + 1) % order.length];
@@ -1487,7 +1531,7 @@ void main() {
     applyCfg();
     requestAnimationFrame(tick);
     log('engine ready v' + VERSION);
-    window.__KUJIRA__ = { version: VERSION, fx: () => fx, cfg: () => cfg, setCfg: (k, v) => { cfg[k] = v; saveCfg(); applyCfg(); }, src: () => srcEl };
+    window.__KUJIRA__ = { version: VERSION, fx: () => fx, cfg: () => cfg, setCfg: (k, v) => { cfg[k] = v; saveCfg(); applyCfg(); }, src: () => srcEl, screenshot: () => screenshot() };
   }
 
   if (document.readyState === 'loading') {
