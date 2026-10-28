@@ -65,7 +65,12 @@ export const Preload = {
     },
 
     openExternal(url:string){
-        shell.openExternal(url)
+        // security: only ever hand http(s) URLs to the OS shell
+        if (typeof url === 'string' && /^https?:\/\//i.test(url)) {
+            shell.openExternal(url)
+            return true
+        }
+        return false
     },
 
     getVersion(){

@@ -1,5 +1,6 @@
 import {
     screen,
+    shell,
     BrowserWindow,
     BrowserWindowConstructorOptions,
 } from 'electron'
@@ -84,6 +85,26 @@ export default (windowName: string, options: BrowserWindowConstructorOptions): B
         autoHideMenuBar: true,
     }
     const win = new BrowserWindow(browserOptions)
+
+    // security: never let the app window navigate away from our own pages
+    win.webContents.on('will-navigate', (event, url) => {
+        const allowed = /^app:\/\//.test(url) || /^devtools:\/\//.test(url) || /^http:\/\/localhost:\d+/.test(url)
+        if (!allowed) {
+            event.preventDefault()
+        }
+    })
+    // security: popups are denied in-app; http(s) links go to the OS browser
+    win.webContents.setWindowOpenHandler(({ url }) => {
+        if (/^https?:\/\//i.test(url)) {
+            shell.openExternal(url)
+        }
+        return { action: 'deny' }
+    })
+    // security: explicit permission gate (mic/camera only, nothing else)
+    win.webContents.session.setPermissionRequestHandler((wc, permission, callback) => {
+        const allow = ['media', 'mediaKeySystem', 'fullscreen', 'pointerLock', 'clipboard-sanitized-write']
+        callback(allow.includes(permission))
+    })
 
     win.on('close', saveState)
 

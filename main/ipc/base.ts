@@ -16,7 +16,14 @@ export default class IpcBase {
 
     onEvent(channel, event, args:EventArgs){
         this._application.log('Ipc:Recv', 'Received event: ['+channel+']', args)
-        if(typeof this[args.action] === 'function') {
+        const actionAllowed = (name: any) =>
+            typeof name === 'string' &&
+            !name.startsWith('_') &&
+            name !== 'constructor' &&
+            !(name in {}) &&                                    // Object.prototype members
+            !Object.prototype.hasOwnProperty.call(IpcBase.prototype, name) && // onEvent/send
+            typeof (this as any)[name] === 'function'
+        if(actionAllowed(args.action)) {
             const response = (Object.keys(args.data).length > 0) ? this[args.action](args.data) : this[args.action]()
             response.then((result) => {
                 this.send(channel, {
