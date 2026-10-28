@@ -6,7 +6,7 @@ function Error500Page() {
   return (
     <React.Fragment>
       <Head>
-        <title>XStreaming - Error</title>
+        <title>Kujira - Error</title>
       </Head>
 
       <p>Oopsie 500.. Application has an error</p>

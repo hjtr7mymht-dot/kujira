@@ -47,7 +47,7 @@ export default class Application {
 
   constructor() {
     console.log(
-      __filename + "[constructor()] Starting XStreaming v" + pkg.version
+      __filename + "[constructor()] Starting Kujira v" + pkg.version
     );
     this._log = Debug("xstreaming");
 
@@ -308,7 +308,7 @@ export default class Application {
     console.log('application.ts settings:', settings)
 
     const windowOptions: any = {
-      title: "XStreaming",
+      title: "Kujira",
       backgroundColor: "rgb(26, 27, 30)",
     };
 

@@ -6,7 +6,7 @@ const IDLE_STATE = {
   details: 'In Library',
   state: 'xCloud & Console Streaming',
   largeImageKey: 'xstreaming_logo',
-  largeImageText: 'XStreaming Desktop',
+  largeImageText: 'Kujira',
   instance: false,
 }
 
@@ -122,7 +122,7 @@ export default class DiscordRpcHelper {
         largeImageKey: largeImage,
         largeImageText: gameName || 'Game',
         smallImageKey: 'xstreaming_logo',
-        smallImageText: 'XStreaming Desktop',
+        smallImageText: 'Kujira',
         startTimestamp: this._playStartTime!,
         instance: false,
       })

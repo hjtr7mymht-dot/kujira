@@ -13,6 +13,7 @@ import Nav from "../../components/Nav";
 import FeedbackModal from "../../components/FeedbackModal";
 import ConfirmModal from "../../components/ConfirmModal";
 import KeyboardMap from "../../components/KeyboardMap";
+import KujiraSettings from "../../components/KujiraSettings";
 import updater from "../../lib/updater";
 import pkg from "../../../package.json";
 
@@ -215,6 +216,9 @@ function Settings() {
               })}
           </Tab>
 
+          <Tab key="Kujira" title="Kujira 画质">
+            <KujiraSettings />
+          </Tab>
           <Tab key="Streaming" title={t("Streaming")}>
             {settings.streaming &&
               settings.streaming.map((item) => {

@@ -6,7 +6,7 @@ function Error404Page() {
   return (
     <React.Fragment>
       <Head>
-        <title>XStreaming - Error</title>
+        <title>Kujira - Error</title>
       </Head>
 
       <p>Oopsie 404.. Action not found</p>

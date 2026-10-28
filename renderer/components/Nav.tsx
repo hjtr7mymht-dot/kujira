@@ -80,7 +80,7 @@ const Nav = ({ current, isLogined }) => {
 
   const renderBrandInfo = () => (
     <div className="flex items-center gap-2 whitespace-nowrap">
-      <p className="font-bold text-inherit">XStreaming</p>
+      <p className="font-bold text-inherit">Kujira</p>
       {
         newVersions ? (
           <Popover color="default" placement="bottom">
