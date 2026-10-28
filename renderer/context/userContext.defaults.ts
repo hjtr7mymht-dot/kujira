@@ -2,7 +2,7 @@ export const defaultSettings = {
   locale: "en",
   use_msal: false,
   fullscreen: false,
-  resolution: 720,
+  resolution: 1081, // 1080P(HQ) — Kujira default
   xhome_auto_connect_server_id: '',
   xhome_bitrate_mode: "Auto",
   xhome_bitrate: 20,
