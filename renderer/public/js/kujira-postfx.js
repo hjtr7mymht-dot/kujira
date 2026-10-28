@@ -15,11 +15,34 @@
     ambilightIntensity: 0.55,
     stats: true,
     panel: true,
+    scaler: 'auto',        // 'auto' | 'fsr' | 'rcas' | 'bilinear' — upscaler choice (vendor-aware auto)
     outputRes: 'screen',   // 'screen' | '1080p' | '1440p' | '4K' (long-edge supersample tiers)
     outputHz: 'screen',    // 'screen' | 60 | 90 | 120 | 144 | 180 | 240 (output refresh cap)
   };
   const CFG_KEY = 'kujira.config';
   let cfg = Object.assign({}, DEFAULTS);
+  // ---- GPU detection (vendor-aware scaler selection) ----
+  const GPU = (() => {
+    try {
+      const g = document.createElement('canvas').getContext('webgl2');
+      const ext = g && g.getExtension('WEBGL_debug_renderer_info');
+      const renderer = ext ? String(g.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : '';
+      const vendorStr = ext ? String(g.getParameter(ext.UNMASKED_VENDOR_WEBGL)) : '';
+      const s = (renderer + ' ' + vendorStr).toLowerCase();
+      const vendor = /nvidia|geforce|\brtx\b|\bgtx\b/.test(s) ? 'nvidia'
+                   : /amd|radeon/.test(s) ? 'amd'
+                   : /intel/.test(s) ? 'intel'
+                   : /apple/.test(s) ? 'apple' : 'other';
+      return { vendor, renderer };
+    } catch (e) {
+      return { vendor: 'other', renderer: '' };
+    }
+  })();
+  function effectiveScaler() {
+    if (cfg.scaler && cfg.scaler !== 'auto') return cfg.scaler;
+    // auto: best real option per vendor today (NIS lands when the compute port is done)
+    return 'fsr';
+  }
   try {
     const raw = window.localStorage.getItem(CFG_KEY);
     if (raw) cfg = Object.assign(cfg, JSON.parse(raw));
@@ -1039,6 +1062,11 @@ void main() {
         this._draw();
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         srcTex = this.composeTex;
+      } else if (mode === 'upscale' && effectiveScaler() !== 'fsr') {
+        // 'rcas': bilinear upsample + contrast-adaptive sharpen in the final pass
+        // 'bilinear': plain copy (lowest load)
+        const p = this._pair();
+        srcTex = this.ring[p ? p.bIdx : this.ringPos];
       } else if (mode === 'upscale') {
         // FSR 1.0: EASU upscale pass -> RCAS sharpen pass -> view-transform copy
         const p = this._pair();
@@ -1075,7 +1103,9 @@ void main() {
       gl.bindTexture(gl.TEXTURE_2D, srcTex);
       gl.uniform1i(gl.getUniformLocation(this.progSharp, 'uSrc'), 0);
       gl.uniform2f(gl.getUniformLocation(this.progSharp, 'uTexel'), 1 / this.srcSize[0], 1 / this.srcSize[1]);
-      gl.uniform1f(gl.getUniformLocation(this.progSharp, 'uSharp'), mode === 'sharp' || mode === 'framegen' ? cfg.sharpness : 0); // upscale already sharpened by RCAS
+      const wantsSharp = mode === 'sharp' || mode === 'framegen' ||
+        (mode === 'upscale' && effectiveScaler() === 'rcas');
+      gl.uniform1f(gl.getUniformLocation(this.progSharp, 'uSharp'), wantsSharp ? cfg.sharpness : 0); // fsr upscale is sharpened by RCAS already
       gl.uniform2f(gl.getUniformLocation(this.progSharp, 'uScale'), vt.scale[0], vt.scale[1]);
       gl.uniform2f(gl.getUniformLocation(this.progSharp, 'uOffset'), vt.offset[0], vt.offset[1]);
       this._draw();
@@ -1352,7 +1382,9 @@ void main() {
         stats.srcFps = Math.round(srcFpsCount / dt);
         stats.outFps = Math.round(outFpsCount / dt);
         stats.renderMs = renderMsN ? +(renderMsSum / renderMsN).toFixed(2) : 0;
-        stats.mode = cfg.mode + (cfg.mode === 'framegen' ? ':' + cfg.framegen : '');
+        stats.mode = cfg.mode + (cfg.mode === 'framegen' ? ':' + cfg.framegen : '')
+          + (cfg.mode === 'upscale' ? ':' + effectiveScaler() : '')
+          + ' [' + GPU.vendor + ']';
         srcFpsCount = 0; outFpsCount = 0; renderMsSum = 0; renderMsN = 0; rafCount = 0;
         lastStatAt = now;
         Object.assign(window.__KUJIRA_METRICS__, stats);

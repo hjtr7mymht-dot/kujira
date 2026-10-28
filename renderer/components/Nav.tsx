@@ -86,7 +86,11 @@ const Nav = ({ current, isLogined }) => {
         className="w-6 h-6 rounded-md"
         draggable="false"
       />
-      <p className="font-bold text-inherit">Kujira</p>
+      <p className="font-bold text-inherit tracking-[0.25em]">KUJIRA</p>
+      <span className="flex items-center gap-1.5 text-[10px] font-semibold text-emerald-300/90 bg-emerald-400/10 border border-emerald-400/20 rounded-full px-2 py-0.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+        就绪
+      </span>
       {
         newVersions ? (
           <Popover color="default" placement="bottom">
@@ -118,7 +122,7 @@ const Nav = ({ current, isLogined }) => {
   )
 
   return (
-    <Navbar maxWidth="full" className="bg-background border-b border-divider" style={{ zIndex: 100 }}>
+    <Navbar maxWidth="full" className="bg-gradient-to-r from-[#0B2545] via-[#0D2040] to-[#0B2545] border-b border-sky-500/25" style={{ zIndex: 100 }}>
       <NavbarContent className="min-w-0 flex-1 basis-0 gap-2" justify="start">
         {isMainPage ? (
           <NavbarItem>
@@ -130,10 +134,10 @@ const Nav = ({ current, isLogined }) => {
                 size="md"
                 color="primary"
                 classNames={{
-                  tabList: "bg-content1 border border-divider p-1",
-                  cursor: "bg-primary shadow-sm",
+                  tabList: "bg-black/30 border border-sky-500/20 p-1",
+                  cursor: "bg-[#9BF00B] shadow-sm",
                   tab: "px-6 h-8",
-                  tabContent: "group-data-[selected=true]:text-white text-default-500 font-bold"
+                  tabContent: "group-data-[selected=true]:text-black text-sky-200/70 font-bold"
                 }}
               >
                 <Tab key="consoles" title={t("Consoles")} />
@@ -183,7 +187,7 @@ const Nav = ({ current, isLogined }) => {
               <DropdownTrigger>
                 <Button
                   variant="flat"
-                  className="bg-content1/50 border border-divider hover:bg-content2 h-10 px-2 pl-1 shadow-sm transition-all rounded-full"
+                  className="bg-white/5 border border-sky-500/25 hover:bg-white/10 h-10 px-2 pl-1 shadow-sm transition-all rounded-full"
                 >
                   <Avatar
                     isBordered
@@ -234,7 +238,7 @@ const Nav = ({ current, isLogined }) => {
               onPress={() => {
                 handleToggleScreen();
               }}
-              className="bg-content1 border border-divider text-default-500 hover:text-foreground hover:bg-content2 shadow-sm"
+              className="bg-white/5 border border-sky-500/25 text-sky-200/80 hover:text-white hover:bg-white/10 shadow-sm"
               aria-label={t('Toggle fullscreen')}
             >
               {document.fullscreenElement ? (

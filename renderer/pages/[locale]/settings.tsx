@@ -201,7 +201,12 @@ function Settings() {
       />
 
       <Layout>
-        <Tabs aria-label="Options">
+        <Tabs aria-label="Options" classNames={{
+          tabList: "bg-black/20 border border-sky-500/15 p-1",
+          cursor: "bg-sky-500/80 shadow-sm",
+          tab: "px-5 h-8",
+          tabContent: "group-data-[selected=true]:text-white text-default-500 font-bold"
+        }}>
           <Tab key="Base" title={t("Base")}>
             {settings.language &&
               settings.language.map((item) => {
