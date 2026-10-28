@@ -25,6 +25,18 @@ npm install        # 国内建议加 --registry=https://registry.npmmirror.com
 npm run build      # 产物在 dist/
 ```
 
+## 赞助支持
+
+如果 Kujira 帮到了你，可以请开发者喝杯奶茶（自愿，不影响任何功能）：
+
+**支付宝**
+
+<img src="renderer/public/images/donate-alipay.png" width="240">
+
+**微信支付**
+
+<img src="renderer/public/images/donate-wechat.png" width="240">
+
 ## 致谢与许可
 
 基于 [XStreamingDesktop](https://github.com/Geocld/XStreaming-desktop) v1.10.2（MIT，

@@ -440,6 +440,25 @@ const CAT_META: Record<string, [string, string]> = {
               </CardBody>
             </Card>
 
+            <Card className="setting-item">
+              <CardBody>
+                <div className="setting-title">赞助支持</div>
+                <div className="setting-description">
+                  如果 Kujira 帮到了你，可以请开发者喝杯奶茶（自愿，不影响任何功能）
+                </div>
+                <div className="flex gap-5 pt-1">
+                  <div className="flex flex-col items-center gap-2">
+                    <img src="/images/donate-alipay.png" alt="支付宝赞助码" className="w-48 rounded-lg border border-divider" />
+                    <span className="text-xs text-default-500">支付宝</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <img src="/images/donate-wechat.png" alt="微信支付赞助码" className="w-48 rounded-lg border border-divider" />
+                    <span className="text-xs text-default-500">微信支付</span>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+
             {(locale === "zh" || locale === "zht") && (
               <Card className="setting-item">
                 <CardBody>
