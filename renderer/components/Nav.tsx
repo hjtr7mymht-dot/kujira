@@ -80,6 +80,12 @@ const Nav = ({ current, isLogined }) => {
 
   const renderBrandInfo = () => (
     <div className="flex items-center gap-2 whitespace-nowrap">
+      <img
+        src="/images/kujira-logo.png"
+        alt="Kujira"
+        className="w-6 h-6 rounded-md"
+        draggable="false"
+      />
       <p className="font-bold text-inherit">Kujira</p>
       {
         newVersions ? (

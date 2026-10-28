@@ -13,6 +13,8 @@ const DEFAULTS = {
   ambilightIntensity: 0.55,
   stats: true,
   panel: true,
+  outputRes: "screen", // 'screen' | '1080p' | '1440p' | '4K'
+  outputHz: "screen", // 'screen' | 60 | 90 | 120 | 144 | 180 | 240
 };
 const CFG_KEY = "kujira.config";
 
@@ -117,6 +119,44 @@ export default function KujiraSettings() {
             <SelectItem key="fit">适应</SelectItem>
             <SelectItem key="fill">填充</SelectItem>
             <SelectItem key="zoom">放大</SelectItem>
+          </Select>
+        </Row>
+
+        <Row label="输出分辨率" hint="纹理与后处理管线的分辨率档，4K 为超采样输出">
+          <Select
+            size="sm"
+            className="w-[180px]"
+            selectedKeys={[String(cfg.outputRes)]}
+            onSelectionChange={(keys) => {
+              const v = Array.from(keys)[0] as string;
+              if (v) update("outputRes", v === "screen" ? "screen" : v);
+            }}
+          >
+            <SelectItem key="screen">跟随屏幕</SelectItem>
+            <SelectItem key="1080p">1080p</SelectItem>
+            <SelectItem key="1440p">1440p</SelectItem>
+            <SelectItem key="4K">4K (3840×2160)</SelectItem>
+          </Select>
+        </Row>
+
+        <Row label="输出刷新率" hint="插帧输出上限，不超过屏幕实际刷新率">
+          <Select
+            size="sm"
+            className="w-[180px]"
+            selectedKeys={[String(cfg.outputHz)]}
+            onSelectionChange={(keys) => {
+              const v = Array.from(keys)[0] as string;
+              if (!v) return;
+              update("outputHz", v === "screen" ? "screen" : Number(v));
+            }}
+          >
+            <SelectItem key="screen">跟随屏幕</SelectItem>
+            <SelectItem key="60">60Hz</SelectItem>
+            <SelectItem key="90">90Hz</SelectItem>
+            <SelectItem key="120">120Hz</SelectItem>
+            <SelectItem key="144">144Hz</SelectItem>
+            <SelectItem key="180">180Hz</SelectItem>
+            <SelectItem key="240">240Hz</SelectItem>
           </Select>
         </Row>
 

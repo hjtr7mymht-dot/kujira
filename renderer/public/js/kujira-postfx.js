@@ -15,6 +15,8 @@
     ambilightIntensity: 0.55,
     stats: true,
     panel: true,
+    outputRes: 'screen',   // 'screen' | '1080p' | '1440p' | '4K' (long-edge supersample tiers)
+    outputHz: 'screen',    // 'screen' | 60 | 90 | 120 | 144 | 180 | 240 (output refresh cap)
   };
   const CFG_KEY = 'kujira.config';
   let cfg = Object.assign({}, DEFAULTS);
@@ -1264,7 +1266,15 @@ void main() {
       canvas.style.width = r.width + 'px';
       canvas.style.height = r.height + 'px';
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const cw = Math.round(r.width * dpr), ch = Math.round(r.height * dpr);
+      let cw = Math.round(r.width * dpr), ch = Math.round(r.height * dpr);
+      // output resolution tier: scale backing long edge to the chosen tier (SSAA up or down)
+      const longEdge = cfg.outputRes === '4K' ? 3840 : cfg.outputRes === '1440p' ? 2560
+                     : cfg.outputRes === '1080p' ? 1920 : 0;
+      if (longEdge > 0 && cw > 0 && ch > 0) {
+        const k = longEdge / Math.max(cw, ch);
+        cw = Math.max(2, Math.round(cw * k));
+        ch = Math.max(2, Math.round(ch * k));
+      }
       if (canvas.width !== cw || canvas.height !== ch) {
         // keep source texture res; only output viewport changes
         canvas.width = cw; canvas.height = ch;
@@ -1274,6 +1284,7 @@ void main() {
 
     // ---------- render loop ----------
     let srcFpsCount = 0, outFpsCount = 0, renderMsSum = 0, renderMsN = 0;
+    let rafCount = 0, screenHz = 60, outSeq = -1, lastOutPhase = -1;
     let lastTestPush = 0;
     let lastStatAt = performance.now();
     let stats = { srcFps: 0, outFps: 0, renderMs: 0, gpuMs: 0, latencyMs: 0, mode: cfg.mode };
@@ -1289,6 +1300,14 @@ void main() {
       canvas.style.display = 'block';
       if (srcKind === 'video') srcEl.style.opacity = '0';
       layout();
+      rafCount++;
+      // output refresh tier: emit at most cfg.outputHz frames per display second
+      if (typeof cfg.outputHz === 'number' && cfg.outputHz > 0 && screenHz > 0) {
+        outSeq++;
+        const phase = Math.floor((outSeq + 1) * cfg.outputHz / screenHz);
+        if (phase === lastOutPhase) return;
+        lastOutPhase = phase;
+      }
 
       // test/canvas source: push ~60fps worth of frames (skip duplicate display ticks)
       if (srcKind === 'test') {
@@ -1329,18 +1348,19 @@ void main() {
 
       if (now - lastStatAt >= 1000) {
         const dt = (now - lastStatAt) / 1000;
+        screenHz = Math.round(rafCount / dt) || screenHz;
         stats.srcFps = Math.round(srcFpsCount / dt);
         stats.outFps = Math.round(outFpsCount / dt);
         stats.renderMs = renderMsN ? +(renderMsSum / renderMsN).toFixed(2) : 0;
         stats.mode = cfg.mode + (cfg.mode === 'framegen' ? ':' + cfg.framegen : '');
-        srcFpsCount = 0; outFpsCount = 0; renderMsSum = 0; renderMsN = 0;
+        srcFpsCount = 0; outFpsCount = 0; renderMsSum = 0; renderMsN = 0; rafCount = 0;
         lastStatAt = now;
         Object.assign(window.__KUJIRA_METRICS__, stats);
         if (cfg.stats) {
           hud.style.display = 'block';
           hud.textContent =
             `Kujira ${VERSION}  ${stats.mode}\n` +
-            `src ${stats.srcFps}fps -> out ${stats.outFps}fps\n` +
+            `src ${stats.srcFps}fps -> out ${stats.outFps}fps  ${canvas.width}x${canvas.height}@${screenHz}Hz\n` +
             `render ${stats.renderMs}ms  gpu ${stats.gpuMs}ms  latency +${stats.latencyMs}ms`;
         } else {
           hud.style.display = 'none';

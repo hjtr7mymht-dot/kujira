@@ -2,9 +2,7 @@ import {
   Button,
   Card,
   CardBody,
-  CardFooter,
   Chip,
-  Divider,
 } from "@heroui/react";
 import { useTranslation } from "next-i18next";
 import { useTheme } from "next-themes";
@@ -575,7 +573,17 @@ function Home() {
       )}
 
       <Layout>
-        <div className="gap-4 grid grid-cols-3">
+        <div className="flex flex-col gap-5">
+          {/* Kujira identity strip */}
+          <div className="flex flex-wrap items-center gap-2 px-1">
+            <img src="/images/kujira-logo.png" alt="Kujira" className="w-7 h-7 rounded-md" draggable="false" />
+            <p className="text-sm font-semibold tracking-wide">Kujira 控制中心</p>
+            <Chip size="sm" radius="sm" variant="flat" className="bg-sky-500/15 text-sky-300">插帧 · 运动补偿</Chip>
+            <Chip size="sm" radius="sm" variant="flat" className="bg-sky-500/15 text-sky-300">FSR 超分</Chip>
+            <Chip size="sm" radius="sm" variant="flat" className="bg-sky-500/15 text-sky-300">4K 输出档</Chip>
+            <Chip size="sm" radius="sm" variant="flat" className="bg-sky-500/15 text-sky-300">TURN 远程</Chip>
+          </div>
+
           {consoles.map((console) => {
             let consoleName: string;
             switch (console.consoleType) {
@@ -602,94 +610,106 @@ function Home() {
             if (theme === "xbox-light") {
               consoleImg = "/images/xss-light.svg";
             }
-
             const consoleSvg = xboxOneIcons[console.consoleType];
             if (console.consoleType === "XboxSeriesX") {
               consoleImg = "/images/series-x.png";
             } else if (console.consoleType === "XboxSeriesS") {
               consoleImg = "/images/series-s.png";
             }
-            
+
             const isAutoConnectEnabled = settings.xhome_auto_connect_server_id === console.serverId;
-            
+            const freeGb = (console.storageDevices || [])
+              .filter((d) => d.isDefault)
+              .map((d) => (d.freeSpaceBytes / 1024 / 1024 / 1024).toFixed(0) + " GB 可用")[0];
+
             return (
-              <Card key={console.serverId}>
-                <CardBody>
-                  <p className="text-center">{console.name}</p>
-                  <p className="text-center text-sm text-gray-400">
-                    {consoleName}
-                  </p>
-                  <p className="text-center text-xs text-gray-500">
-                    ({console.serverId})
-                  </p>
-                  <div className="flex justify-center items-center">
-                    {consoleSvg ? (
-                      <div
-                        className="flex items-center justify-center"
-                        style={{ width: CONSOLE_ICON_SIZE, height: CONSOLE_ICON_SIZE }}
-                        dangerouslySetInnerHTML={{ __html: consoleSvg }}
-                      />
-                    ) : (
-                      <Image
-                        src={consoleImg}
-                        alt="xss"
-                        draggable="false"
-                        width={CONSOLE_ICON_SIZE}
-                        height={CONSOLE_ICON_SIZE}
-                      />
-                    )}
-                  </div>
-                  <div className="flex justify-center py-1">
-                    {console.powerState === "On" ? (
-                      <Chip size="sm" radius="none" color="success">
-                        {t("Powered on")}
-                      </Chip>
-                    ) : console.powerState === "ConnectedStandby" ? (
-                      <Chip size="sm" radius="none" color="warning">
-                        {t("Standby")}
-                      </Chip>
-                    ) : (
-                      <Chip size="sm" radius="none">
-                        {console.powerState}
-                      </Chip>
-                    )}
-                  </div>
-                </CardBody>
-                <Divider />
-                <CardFooter>
-                  <div className="flex flex-col gap-2 w-full">
-                    {
-                      settings.power_on && console.powerState === 'ConnectedStandby' ? (
+              <Card
+                key={console.serverId}
+                className="bg-gradient-to-r from-[#0B2545] via-[#0C1C36] to-[#0A1628] border border-sky-500/20"
+              >
+                <CardBody className="p-6">
+                  <div className="flex flex-wrap items-center gap-8">
+                    <div className="flex items-center justify-center w-[168px] h-[168px] rounded-2xl bg-white/5 border border-white/10">
+                      {consoleSvg ? (
+                        <div
+                          className="flex items-center justify-center"
+                          style={{ width: CONSOLE_ICON_SIZE, height: CONSOLE_ICON_SIZE }}
+                          dangerouslySetInnerHTML={{ __html: consoleSvg }}
+                        />
+                      ) : (
+                        <Image
+                          src={consoleImg}
+                          alt="console"
+                          draggable="false"
+                          width={CONSOLE_ICON_SIZE}
+                          height={CONSOLE_ICON_SIZE}
+                        />
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-2 flex-1 min-w-[260px]">
+                      <p className="text-2xl font-bold leading-tight">{console.name}</p>
+                      <p className="text-sky-300/90">{consoleName}</p>
+                      <p className="text-xs text-gray-500">{console.serverId}</p>
+                      <div className="flex items-center gap-2 pt-1">
+                        {console.powerState === "On" ? (
+                          <Chip size="sm" radius="sm" color="success" variant="flat">
+                            {t("Powered on")}
+                          </Chip>
+                        ) : console.powerState === "ConnectedStandby" ? (
+                          <Chip size="sm" radius="sm" color="warning" variant="flat">
+                            {t("Standby")}
+                          </Chip>
+                        ) : (
+                          <Chip size="sm" radius="sm" variant="flat">
+                            {console.powerState}
+                          </Chip>
+                        )}
+                        {freeGb && (
+                          <Chip size="sm" radius="sm" variant="flat" className="bg-white/5 text-gray-300">
+                            {freeGb}
+                          </Chip>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2 w-[300px]">
+                      {settings.power_on && console.powerState === "ConnectedStandby" ? (
                         <Button
-                          color="primary"
-                          size="sm"
+                          color="success"
+                          size="lg"
+                          radius="sm"
                           fullWidth
+                          className="font-bold text-base bg-[#9BF00B] text-black"
                           onPress={() => powerOnAndStartSession(console.serverId)}
                         >
-                          {t('Power on and start stream')}
+                          {t("Power on and start stream")}
                         </Button>
                       ) : (
                         <Button
-                          color="primary"
-                          size="sm"
+                          color="success"
+                          size="lg"
+                          radius="sm"
                           fullWidth
+                          className="font-bold text-base bg-[#9BF00B] text-black"
                           onPress={() => startSession(console.serverId)}
                         >
-                          {t('Start stream')}
+                          {t("Start stream")}
                         </Button>
-                      )
-                    }
-                    
-                    <Button
-                      color={isAutoConnectEnabled ? "secondary" : "default"}
-                      size="sm"
-                      fullWidth
-                      onPress={() => toggleAutoConnect(console.serverId)}
-                    >
-                      {isAutoConnectEnabled ? t('auto_connect_enabled') : t('enable_auto_connect')}
-                    </Button>
+                      )}
+                      <Button
+                        color={isAutoConnectEnabled ? "secondary" : "default"}
+                        size="sm"
+                        radius="sm"
+                        fullWidth
+                        variant={isAutoConnectEnabled ? "flat" : "bordered"}
+                        onPress={() => toggleAutoConnect(console.serverId)}
+                      >
+                        {isAutoConnectEnabled ? t("auto_connect_enabled") : t("enable_auto_connect")}
+                      </Button>
+                    </div>
                   </div>
-                </CardFooter>
+                </CardBody>
               </Card>
             );
           })}
