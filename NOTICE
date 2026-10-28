@@ -1,0 +1,26 @@
+Kujira — a fork of XStreamingDesktop with an original post-processing layer.
+
+This product includes the following third-party components:
+
+1. XStreamingDesktop (https://github.com/Geocld/XStreaming-desktop)
+   Copyright (c) Geocld and contributors. Licensed under the MIT License.
+   The application shell, Xbox authentication chain (XAL), streaming session
+   management and UI are derived from this project.
+
+2. xstreaming-player (https://www.npmjs.com/package/xstreaming-player)
+   Copyright (c) Geocld. Licensed under the MIT License.
+   WebRTC streaming player core.
+
+3. AMD FidelityFX Super Resolution v1.0.2 (EASU + RCAS shaders)
+   Copyright (c) 2021 Advanced Micro Devices, Inc. Licensed under the MIT License.
+   Adapted for WebGL2 in renderer/public/js/kujira-postfx.js.
+
+4. Kujira post-processing engine (renderer/public/js/kujira-postfx.js) and
+   TURN relay injector (renderer/public/js/kujira-turn.js)
+   Copyright (c) 2026 Myth Zx. Licensed under the MIT License.
+   Original work: motion-compensated frame generation, upscaling pipeline,
+   ambilight, view modes, verification harness.
+
+5. Open Relay (https://www.metered.ca/tools/openrelay/) — default free TURN
+   relay used as the remote-play fallback. Replace with your own TURN server
+   via localStorage key 'kujira.turn' for production use.

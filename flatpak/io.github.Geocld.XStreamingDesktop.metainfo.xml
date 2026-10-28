@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+  <id>io.github.Geocld.XStreamingDesktop</id>
+  <launchable type="desktop-id">io.github.Geocld.XStreamingDesktop.desktop</launchable>
+  <name>XStreamingDesktop</name>
+  <project_license>MIT</project_license>
+  <developer_name>Geocld</developer_name>
+  <summary>XStreaming: Lets you stream Xbox games to your device, supporting Xbox streaming and Xbox Cloud Gaming (XCloud).</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <url type="homepage">https://github.com/Geocld/XStreamingDesktop</url>
+  <url type="help">https://github.com/Geocld/XStreamingDesktop/issues</url>
+  <url type="bugtracker">https://github.com/Geocld/XStreamingDesktop/issues</url>
+  <description>
+    <p>XStreaming allows you to stream audio and video from your Xbox One and Xbox Series X/S to your device, enabling you to play Xbox games anywhere. It also supports XCloud - a user-friendly Xbox streaming app that supports playing the Xbox Game Pass Ultimate game library without proxy, features gamepad vibration, and provides you with an enhanced Xbox gaming experience.</p>
+    <p>Key Features:</p>
+    <p>Stream audio and video from Xbox One, Xbox Series S/X</p>
+    <p>Support 1080P(HQ) resolution</p>
+    <p>Support external, Bluetooth, virtual controllers with rumble</p>
+    <p>Support controller button mapping</p>
+    <p>Proxy-free cloud gaming</p>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <image type="source">https://raw.githubusercontent.com/Geocld/XStreamingDesktop/main/images/console.jpg</image>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://raw.githubusercontent.com/Geocld/XStreamingDesktop/main/images/xcloud.jpg</image>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://raw.githubusercontent.com/Geocld/XStreamingDesktop/main/images/xcloud2.jpg</image>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://raw.githubusercontent.com/Geocld/XStreamingDesktop/main/images/settings.jpg</image>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release version="1.10.2" date="2026-06-22">
+      <description>
+          <ul>
+            <li>Fixed trigger rumble error issue.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.10.1" date="2026-06-15">
+      <description>
+          <ul>
+            <li>Fixed keepalive issue on xcloud.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.10.0" date="2026-05-15">
+      <description>
+          <ul>
+            <li>Supported native gamepad kernal.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.9.9" date="2026-04-17">
+      <description>
+          <ul>
+            <li>Fixed control issues in Microsoft Flight Simulator and Minecraft Dungeons.</li>
+            <li>Fixed system pop-up issues</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.9.8" date="2026-03-09">
+      <description>
+          <ul>
+            <li>UI improvements, fullscreen shortcuts, and nav redesign.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.9.7" date="2026-02-27">
+      <description>
+          <ul>
+            <li>Co-op supported.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.9.6" date="2026-02-13">
+      <description>
+          <ul>
+            <li>Optimize screen sleep when streaming.</li>
+            <li>Added audio vibration (experimental).</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.9.5" date="2026-02-11">
+      <description>
+          <ul>
+            <li>Add auto-connect for consoles.</li>
+            <li>Add MSAL authentication for some users who meed login issues.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.9.4" date="2026-01-27">
+      <description>
+          <ul>
+            <li>Adjust xCloud self games show.</li>
+            <li>Improve stablity of connection.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.9.3" date="2025-12-05">
+      <description>
+          <ul>
+            <li>Fix login issues caused by Microsoft API changes.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.9.2" date="2025-11-17">
+      <description>
+          <ul>
+            <li>Changes:</li>
+            <li>Controllers mix input.</li>
+            <li>FSR sharpness option for stream screen.</li>
+            <li>Add India region to xCloud.</li>
+            <li>Support persistent storage for signaling server</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.9.1" date="2025-11-06">
+      <description>
+          <ul>
+            <li>Changes:</li>
+            <li>Fixed steamdeck black screen when FSR open.</li>
+            <li>Add『Use vulkan』option.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.9.0" date="2025-11-05">
+      <description>
+          <ul>
+            <li>Changes:</li>
+            <li>FidelityFX Super Resolution 1.0 supported.</li>
+            <li>Add『background keepalive』option to keep input when app in backgroud.</li>
+            <li>Update some warning text.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.8.9" date="2025-09-24">
+      <description>
+          <ul>
+            <li>Fixed:</li>
+            <li>Fix for xCloud Login Error Due to Expired Token.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.8.8" date="2025-09-22">
+      <description>
+          <ul>
+            <li>Changes:</li>
+            <li>Fixed duplicate games issue in xCloud list.</li>
+            <li>Enhancement controller navigation.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.8.7" date="2025-09-02">
+      <description>
+          <ul>
+            <li>Fixed:</li>
+            <li>xCloud error when fetch games.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.8.6" date="2025-09-02">
+      <description>
+          <ul>
+            <li>Fixed:</li>
+            <li>xCloud error when fetch games.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.8.5" date="2025-08-18">
+      <description>
+          <ul>
+            <li>Changes:</li>
+            <li>Optimize login wating time.</li>
+            <li>Optimize xcloud loading time.</li>
+            <li>Fix xcloud game error issue.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.8.4" date="2025-08-06">
+      <description>
+          <ul>
+            <li>Changes:</li>
+            <li>Fix audio issue.</li>
+            <li>Optimize consoles fetching.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.8.3" date="2025-07-16">
+      <description>
+          <ul>
+            <li>Feature:</li>
+            <li>Enable custom TURN server.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.8.2" date="2025-07-05">
+      <description>
+          <ul>
+            <li>Fixed:</li>
+            <li>Can not exit when connecting.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.8.1" date="2025-07-04">
+      <description>
+          <ul>
+            <li>Fixed:</li>
+            <li>xCloud list show error issue.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.8.0" date="2025-07-03">
+      <description>
+          <ul>
+            <li>Changes:</li>
+            <li>Some cloud games support native keyboard and mouse operations.</li>
+            <li>Fix the issue of multiple controllers not working on Windows.</li>
+            <li>Optimize the interface.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.7.0" date="2025-05-28">
+      <description>
+          <ul>
+            <li>Changes:</li>
+            <li>Microphone supported</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.6.5" date="2025-05-15">
+      <description>
+          <ul>
+            <li>Changes:</li>
+            <li>Bugs Fixed</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.6.4" date="2025-04-29">
+      <description>
+          <ul>
+            <li>Changes:</li>
+            <li>Update UI</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.6.3" date="2025-04-17">
+      <description>
+          <ul>
+            <li>Changes:</li>
+            <li>Optimize SteamDeck's video decode</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.6.2" date="2025-04-15">
+      <description>
+          <ul>
+            <li>Fixed:</li>
+            <li>Keyboard not working</li>
+            <li>Optimize action bar</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.6.1" date="2025-04-02">
+      <description>
+          <ul>
+            <li>Fixed:</li>
+            <li>Keyboard maping not working in SteamDeck</li>
+            <li>Send text issue</li>
+            <li>Optimize audio controller</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.6.0" date="2025-03-28">
+      <description>
+          <ul>
+            <li>Features:</li>
+            <li>Audio volume control supported</li>
+            <li>Send text in stream view</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.5.0" date="2025-03-24">
+      <description>
+          <ul>
+            <li>Fixed:</li>
+            <li>Stream black screen in some case.</li>
+          </ul>
+          <ul>
+            <li>Features:</li>
+            <li>New logo</li>
+            <li>Stick maping in keyboard supported.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.4.1" date="2025-03-04">
+      <description>
+          <ul>
+            <li>Fix:</li>
+            <li>Controller not working.</li>
+          </ul>
+      </description>
+    </release>
+    <release version="1.4.0" date="2025-02-28">
+     <description>
+        <ul>
+          <li>First full release</li>
+        </ul>
+     </description>
+    </release>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>
