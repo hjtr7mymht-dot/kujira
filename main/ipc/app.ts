@@ -54,6 +54,12 @@ export default class IpcApp extends IpcBase {
     });
   }
 
+  hidController() {
+      return new Promise((resolve) => {
+          resolve({ states: [] })
+      })
+  }
+
   getAppLevel() {
     return new Promise((resolve) => {
       const settings = this.getSettings();

@@ -1,15 +1,18 @@
 .setting-item {
-  margin-bottom: 25px;
+  margin-bottom: 14px;
 }
 
 .setting-title {
-  font-size: 14px;
-  margin-bottom: 5px;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 6px;
 }
 
 .setting-description {
   font-size: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  opacity: 0.65;
+  line-height: 1.5;
 }
 
 .setting-select label {

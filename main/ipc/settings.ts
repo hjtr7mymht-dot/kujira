@@ -6,7 +6,9 @@ export default class IpcSettings extends IpcBase {
     setSettings(args:(typeof defaultSettings)){
         return new Promise((resolve) => {
             const oldSettings = this._application._store.get('settings', defaultSettings) as any
-            const newSettings = {...defaultSettings, ...args}
+            // merge against stored settings too: a partial save must never reset
+            // fields it did not include back to their defaults
+            const newSettings = {...defaultSettings, ...oldSettings, ...args}
             this._application._store.set('settings', newSettings)
 
             const rpcEnabled = (newSettings as any).discord_rpc
@@ -45,4 +47,4 @@ export default class IpcSettings extends IpcBase {
             resolve(settings)
         })
     }
-}
+}

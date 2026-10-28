@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Tabs, Tab, Card, CardBody, Input, addToast } from "@heroui/react";
+import { Button, Card, CardBody, Input, addToast } from "@heroui/react";
 import { useTranslation } from "next-i18next";
 import { useRouter } from "next/router";
 import { useSettings } from "../../context/userContext";
@@ -31,8 +31,20 @@ const resolveGamepadKernel = (settings: any) => {
   return "web";
 };
 
+
 function Settings() {
   const { t, i18n: { language: locale } } = useTranslation("settings");
+
+const CAT_META: Record<string, [string, string]> = {
+  "Base": [t("Base"), "基础偏好、语言与显示"],
+  "Kujira": ["Kujira 画质", "画质引擎：插帧 · 超分 · 输出档位"],
+  "Streaming": [t("Streaming"), "串流质量与 TURN 中继"],
+  "Gamepad": [t("Gamepad"), "手柄、振动与按键映射"],
+  "Audio": [t("Audio"), "声音与音频反馈"],
+  "XHome": [t("Xhome"), "主机远程串流"],
+  "Xcloud": [t("Xcloud"), "云游戏"],
+  "Others": [t("Others"), "测试、重置与维护"],
+};
   const { settings: localSettings, setSettings: setLocalSettings, resetSettings } = useSettings();
   const router = useRouter();
   const isNativeGamepadKernel = resolveGamepadKernel(localSettings) === "native";
@@ -48,6 +60,7 @@ function Settings() {
   const [isLogined, setIsLogined] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
+  const [cat, setCat] = useState("Base");
   const [settings, setSettings] = useState<any>({});
 
   const [serverUrl, setServerUrl] = useState('');
@@ -201,13 +214,41 @@ function Settings() {
       />
 
       <Layout>
-        <Tabs aria-label="Options" classNames={{
-          tabList: "bg-black/20 border border-sky-500/15 p-1",
-          cursor: "bg-sky-500/80 shadow-sm",
-          tab: "px-5 h-8",
-          tabContent: "group-data-[selected=true]:text-white text-default-500 font-bold"
-        }}>
-          <Tab key="Base" title={t("Base")}>
+      <Layout>
+        <div className="flex gap-8 items-start">
+          <nav className="w-[232px] shrink-0 flex flex-col gap-1 pt-2">
+            {[
+              ["Base", t("Base")],
+              ["Kujira", "Kujira 画质"],
+              ["Streaming", t("Streaming")],
+              ["Gamepad", t("Gamepad")],
+              ["Audio", t("Audio")],
+              ["XHome", t("Xhome")],
+              ["Xcloud", t("Xcloud")],
+              ["Others", t("Others")],
+            ].map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setCat(key as string)}
+                className={
+                  "text-left px-4 py-3 rounded-lg text-sm font-semibold transition-colors border-l-4 " +
+                  (cat === key
+                    ? "bg-white/10 text-white border-[#9BF00B]"
+                    : "text-default-500 border-transparent hover:bg-white/5 hover:text-foreground")
+                }
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="flex-1 min-w-0 flex flex-col gap-4">
+            <div className="pb-1">
+              <p className="text-2xl font-bold">{CAT_META[cat as string]?.[0]}</p>
+              <p className="text-sm text-default-500 mt-1">{CAT_META[cat as string]?.[1]}</p>
+            </div>
+            {cat === "Base" && (
+              <>
             {settings.language &&
               settings.language.map((item) => {
                 return (
@@ -219,12 +260,17 @@ function Settings() {
                   />
                 );
               })}
-          </Tab>
+              </>
+            )}
 
-          <Tab key="Kujira" title="Kujira 画质">
+            {cat === "Kujira" && (
+              <>
             <KujiraSettings />
-          </Tab>
-          <Tab key="Streaming" title={t("Streaming")}>
+              </>
+            )}
+
+            {cat === "Streaming" && (
+              <>
             {settings.streaming &&
               settings.streaming.map((item) => {
                 return (
@@ -252,9 +298,11 @@ function Settings() {
                 </CardBody>
               </Card>
             </div>
-          </Tab>
+              </>
+            )}
 
-          <Tab key="Gamepad" title={t("Gamepad")}>
+            {cat === "Gamepad" && (
+              <>
             {settings.gamepad &&
               settings.gamepad.map((item) => {
                 return (
@@ -286,9 +334,11 @@ function Settings() {
                 </Button>
               </CardBody>
             </Card>
-          </Tab>
+              </>
+            )}
 
-          <Tab key="Audio" title={t("Audio")}>
+            {cat === "Audio" && (
+              <>
             {settings.audio &&
               settings.audio.map((item) => {
                 return (
@@ -300,9 +350,11 @@ function Settings() {
                   />
                 );
               })}
-          </Tab>
+              </>
+            )}
 
-          <Tab key="XHome" title={t("Xhome")}>
+            {cat === "XHome" && (
+              <>
             {settings.xhome &&
               settings.xhome.map((item) => {
                 return (
@@ -314,9 +366,11 @@ function Settings() {
                   />
                 );
               })}
-          </Tab>
+              </>
+            )}
 
-          <Tab key="Xcloud" title={t("Xcloud")}>
+            {cat === "Xcloud" && (
+              <>
             {settings.xcloud &&
               settings.xcloud.map((item) => {
                 return (
@@ -328,9 +382,11 @@ function Settings() {
                   />
                 );
               })}
-          </Tab>
+              </>
+            )}
 
-          <Tab key="Others" title={t("Others")}>
+            {cat === "Others" && (
+              <>
             <Card className="setting-item">
               <CardBody>
                 <div className="setting-title">{t("Gamepad tester")}</div>
@@ -430,8 +486,11 @@ function Settings() {
               </CardBody>
             </Card>
 
-          </Tab>
-        </Tabs>
+              </>
+            )}
+          </div>
+        </div>
+      </Layout>
       </Layout>
     </>
   );

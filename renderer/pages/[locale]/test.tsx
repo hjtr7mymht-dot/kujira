@@ -22,6 +22,8 @@ function GamepadTester() {
     setInterval(() => {
       Ipc.send("app", "hidController").then(res => {
         console.log('controller states:', res.states)
+      }).catch(() => {
+        // native HID kernel unavailable in this build; Web gamepad path still runs
       })
     }, 2000);
 
