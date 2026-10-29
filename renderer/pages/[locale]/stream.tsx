@@ -14,6 +14,7 @@ import {
   Input,
 } from "@heroui/react";
 import ActionBar from "../../components/ActionBar";
+import KujiraDisplay from "../../components/KujiraDisplay";
 import Display from "../../components/Display";
 import FSRDisplay from "../../components/FSRDisplay";
 import Audio from "../../components/Audio";
@@ -182,6 +183,7 @@ function Stream() {
   const [showWarning, setShowWarning] = useState(false);
   const [showDisplay, setShowDisplay] = useState(false);
   const [showFSRDisplay, setShowFSRDisplay] = useState(false);
+  const [showKujira, setShowKujira] = useState(false);
   const [showAudio, setShowAudio] = useState(false);
   const [showTextModal, setShowTextModal] = useState(false);
   const [showSystemMessageModal, setShowSystemMessageModal] = useState(false);
@@ -1274,6 +1276,7 @@ function Stream() {
                 setShowDisplay(true)
               }
             }}
+            onKujira={() => setShowKujira(true)}
             onAudio={() => setShowAudio(true)}
             onMic={handleToggleMic}
             onText={() => {
@@ -1315,6 +1318,10 @@ function Stream() {
             refreshPlayer(options);
           }}
         />
+      )}
+
+      {showKujira && (
+        <KujiraDisplay onClose={() => setShowKujira(false)} />
       )}
 
       {

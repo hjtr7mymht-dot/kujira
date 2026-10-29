@@ -14,7 +14,7 @@
     ambilight: true,
     ambilightIntensity: 0.55,
     stats: true,
-    panel: true,
+    panel: false, // Kujira: hidden by default, opened from the stream menu
     hudOpacity: 0.85,     // HUD text opacity 0.3..1
     scaler: 'auto',        // 'auto' | 'fsr' | 'rcas' | 'bilinear' — upscaler choice (vendor-aware auto)
     outputRes: 'screen',   // 'screen' | '1080p' | '1440p' | '4K' (long-edge supersample tiers)
@@ -1437,7 +1437,7 @@ void main() {
         <div class="row"><span>环境光</span><div class="seg" data-k="ambilight">
           <button data-v="true">开</button><button data-v="false">关</button></div></div>
         <div class="row"><span>光强</span><input type="range" min="0" max="1" step="0.05" data-k="ambilightIntensity"></div>
-        <div class="hint">⌥⌥K 面板 | ⌥1/2/3 视图 | ⌥S 状态 | ⌥E 开关 | ⌥P 截图</div>
+        <div class="hint">Alt/⌥+K 面板 | Alt/⌥+1/2/3 视图 | Alt/⌥+S 状态 | Alt/⌥+E 开关 | Alt/⌥+P 截图 | Alt/⌥+F 模式</div>
       `;
       document.documentElement.appendChild(p);
 
@@ -1507,22 +1507,28 @@ void main() {
     }
 
     const panel = buildPanel();
+    cfg.panel = false; // Kujira: never auto-show on boot — open from the stream menu / hotkey
 
     // ---------- hotkeys ----------
+    // Cross-platform hotkeys: match PHYSICAL keys via e.code.
+    // e.key is a trap — on macOS Option+K types '˚' and on Windows the bare
+    // Alt combo can activate the menu bar, so e.key.toLowerCase() never matches.
+    // Accept Alt/Option/Ctrl as the modifier on every OS.
     window.addEventListener('keydown', (e) => {
-      if (!e.altKey) return;
-      const k = e.key.toLowerCase();
-      if (k === 'k') { cfg.panel = !cfg.panel; saveCfg(); applyCfg(); e.preventDefault(); }
-      else if (k === 's') { cfg.stats = !cfg.stats; saveCfg(); applyCfg(); e.preventDefault(); }
-      else if (k === 'e') { cfg.enabled = !cfg.enabled; saveCfg(); e.preventDefault(); }
-      else if (k === '1') { cfg.viewMode = 'fit'; saveCfg(); e.preventDefault(); }
-      else if (k === '2') { cfg.viewMode = 'fill'; saveCfg(); e.preventDefault(); }
-      else if (k === '3') { cfg.viewMode = 'zoom'; saveCfg(); e.preventDefault(); }
-      else if (k === 'p') { screenshot(); e.preventDefault(); }
-      else if (k === 'f') {
+      if (e.repeat || (!e.altKey && !e.ctrlKey && !e.metaKey)) return;
+      const code = e.code;
+      const hit = () => { e.preventDefault(); e.stopPropagation(); };
+      if (code === 'KeyK') { cfg.panel = !cfg.panel; saveCfg(); applyCfg(); hit(); }
+      else if (code === 'KeyS') { cfg.stats = !cfg.stats; saveCfg(); applyCfg(); hit(); }
+      else if (code === 'KeyE') { cfg.enabled = !cfg.enabled; saveCfg(); hit(); }
+      else if (code === 'Digit1' || code === 'Numpad1') { cfg.viewMode = 'fit'; saveCfg(); applyCfg(); hit(); }
+      else if (code === 'Digit2' || code === 'Numpad2') { cfg.viewMode = 'fill'; saveCfg(); applyCfg(); hit(); }
+      else if (code === 'Digit3' || code === 'Numpad3') { cfg.viewMode = 'zoom'; saveCfg(); applyCfg(); hit(); }
+      else if (code === 'KeyP') { screenshot(); hit(); }
+      else if (code === 'KeyF') {
         const order = ['off', 'sharp', 'upscale', 'framegen'];
         cfg.mode = order[(order.indexOf(cfg.mode) + 1) % order.length];
-        saveCfg(); applyCfg(); e.preventDefault();
+        saveCfg(); applyCfg(); hit();
       }
     });
 

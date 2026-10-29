@@ -43,6 +43,10 @@ function ActionBar(props) {
     runAndClose(props.onDisplay);
   };
 
+  const handleKujira = () => {
+    runAndClose(props.onKujira);
+  };
+
   const handleAudio = () => {
     runAndClose(props.onAudio);
   };
@@ -99,6 +103,14 @@ function ActionBar(props) {
                       isConnected && (
                         <Button size="sm" variant="flat" className="justify-center" onPress={handleDisplay}>
                           {t("Display settings")}
+                        </Button>
+                      )
+                    }
+
+                    {
+                      isConnected && (
+                        <Button size="sm" variant="flat" className="justify-center" onPress={handleKujira}>
+                          Kujira 画质
                         </Button>
                       )
                     }
