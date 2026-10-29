@@ -67,6 +67,16 @@ function ActionBar(props) {
     runAndClose(props.onLongPressNexus);
   };
 
+  const handleWebPlayer = () => {
+    runAndClose(() => {
+      try {
+        (window as any).XStreaming?.openExternal("https://www.xbox.com/play");
+      } catch (e) {
+        console.error("[Kujira] openExternal failed", e);
+      }
+    });
+  };
+
   const handleToggleFullscreen = () => {
     runAndClose(() => {
       Ipc.send('app', 'toggleFullscreen')
@@ -119,6 +129,10 @@ function ActionBar(props) {
                         </Button>
                       )
                     }
+
+                    <Button size="sm" variant="flat" className="justify-center" onPress={handleWebPlayer}>
+                      官方网页端（备用）
+                    </Button>
 
                     {
                       isConnected && (

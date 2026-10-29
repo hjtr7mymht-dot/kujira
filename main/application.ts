@@ -431,16 +431,22 @@ export default class Application {
 
 // Kujira: single-instance lock — a second launch would fight over the auth
 // token store and config (UI felt dead). Second launch focuses the first.
+// Exception: the GPU-flag relaunch (carries --kujira-relaunched) starts while
+// the scheduling instance is still tearing down, so it can lose the lock race
+// by a few ms and must NOT quit — that instance already committed to exiting.
+const kujiraRelaunched = process.argv.includes("--kujira-relaunched");
 const gotLock = ElectronApp.requestSingleInstanceLock();
-if (!gotLock) {
+if (!gotLock && !kujiraRelaunched) {
   ElectronApp.quit();
 } else {
-  ElectronApp.on("second-instance", () => {
-    const win = BrowserWindow.getAllWindows()[0];
-    if (win) {
-      if (win.isMinimized()) win.restore();
-      win.focus();
-    }
-  });
+  if (gotLock) {
+    ElectronApp.on("second-instance", () => {
+      const win = BrowserWindow.getAllWindows()[0];
+      if (win) {
+        if (win.isMinimized()) win.restore();
+        win.focus();
+      }
+    });
+  }
   new Application();
 }

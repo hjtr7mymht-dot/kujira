@@ -184,6 +184,7 @@ function Stream() {
   const [showDisplay, setShowDisplay] = useState(false);
   const [showFSRDisplay, setShowFSRDisplay] = useState(false);
   const [showKujira, setShowKujira] = useState(false);
+  const [webFallback, setWebFallback] = useState(false);
   const [showAudio, setShowAudio] = useState(false);
   const [showTextModal, setShowTextModal] = useState(false);
   const [showSystemMessageModal, setShowSystemMessageModal] = useState(false);
@@ -514,6 +515,40 @@ function Stream() {
     s.onload = () => console.log("[Kujira] postfx loaded");
     s.onerror = () => console.error("[Kujira] postfx failed to load");
     document.body.appendChild(s);
+  }, []);
+
+  // Kujira: official-web fallback — if the console link never produces video
+  // pixels (NAT/relay failures hang forever on "connecting" with a black
+  // screen), hand the user the official Xbox web player instead. Cancelled the
+  // moment real video frames arrive.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const started = Date.now();
+    let fired = false;
+    const iv = window.setInterval(() => {
+      const v = document.getElementById("streamVideo") as HTMLVideoElement | null;
+      if (v && v.videoWidth > 0) {
+        window.clearInterval(iv);
+        if (fired) {
+          // video showed up after the fallback fired — the link just needed
+          // longer; withdraw the banner so a working stream isn't covered
+          setWebFallback(false);
+          console.log("[Kujira] stream connected late — fallback banner withdrawn");
+        }
+        return;
+      }
+      if (!fired && Date.now() - started > 60000) {
+        fired = true;
+        setWebFallback(true);
+        try {
+          (window as any).XStreaming?.openExternal("https://www.xbox.com/play");
+          console.log("[Kujira] stream link never connected — official web player opened");
+        } catch (e) {
+          console.error("[Kujira] openExternal failed", e);
+        }
+      }
+    }, 2000);
+    return () => window.clearInterval(iv);
   }, []);
 
   useEffect(() => {
@@ -1339,6 +1374,32 @@ function Stream() {
         />
       )}
 
+      {webFallback && (
+        <div className="fixed bottom-24 left-1/2 z-[120] w-[420px] -translate-x-1/2 rounded-2xl border border-white/15 bg-black/85 p-4 text-white shadow-2xl backdrop-blur">
+          <div className="text-sm font-semibold">主链路连接失败</div>
+          <div className="mt-1 text-xs text-white/70">
+            串流 45 秒未出画面（多为网络 NAT 拦截）。已在浏览器打开官方 Xbox 网页端作为备用通道。
+          </div>
+          <div className="mt-3 flex gap-2">
+            <Button
+              size="sm"
+              color="primary"
+              onPress={() => {
+                try {
+                  (window as any).XStreaming?.openExternal("https://www.xbox.com/play");
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
+            >
+              重新打开官方网页端
+            </Button>
+            <Button size="sm" variant="flat" onPress={() => setWebFallback(false)}>
+              继续等待 Kujira 链路
+            </Button>
+          </div>
+        </div>
+      )}
       {showKujira && (
         <KujiraDisplay onClose={() => setShowKujira(false)} />
       )}
