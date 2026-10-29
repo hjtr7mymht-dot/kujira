@@ -1185,8 +1185,8 @@ void main() {
 
   // ============================== UI ==============================
   const css = `
-  #kujira-canvas { position: fixed; z-index: 2147483000; pointer-events: none; background: #000; }
-  #kujira-amb { position: fixed; inset: 0; z-index: 2147482999; pointer-events: none;
+  #kujira-canvas { position: fixed; z-index: 10; pointer-events: none; background: #000; } /* below the UI layer (bar 101) — a 2^31 z buried the menu button */
+  #kujira-amb { position: fixed; inset: 0; z-index: 9; pointer-events: none;
     filter: blur(70px) saturate(1.5) brightness(1.15); transform: scale(1.1); }
   #kujira-hud { position: fixed; top: 12px; left: 12px; z-index: 51; pointer-events: none;
     font: 12px/1.5 ui-monospace, Menlo, monospace; color: #9fe8ff; background: rgba(5,12,20,.55);
