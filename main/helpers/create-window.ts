@@ -88,7 +88,14 @@ export default (windowName: string, options: BrowserWindowConstructorOptions): B
 
     // security: never let the app window navigate away from our own pages
     win.webContents.on('will-navigate', (event, url) => {
-        const allowed = /^app:\/\//.test(url) || /^devtools:\/\//.test(url) || /^http:\/\/localhost:\d+/.test(url)
+        const allowed =
+            /^app:\/\//.test(url) ||
+            /^devtools:\/\//.test(url) ||
+            /^http:\/\/localhost:\d+/.test(url) ||
+            // Microsoft/Xbox OAuth chain: the auth window (also built here)
+            // navigates inside these hosts during login — blocking them
+            // freezes the login spinner forever.
+            /^https:\/\/([a-z0-9-]+\.)*(live\.com|microsoft\.com|microsoftonline\.com|xboxlive\.com|xbox\.com)([:/]|$)/i.test(url)
         if (!allowed) {
             event.preventDefault()
         }
