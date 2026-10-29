@@ -409,4 +409,18 @@ export default class Application {
   }
 }
 
-new Application();
+// Kujira: single-instance lock — a second launch would fight over the auth
+// token store and config (UI felt dead). Second launch focuses the first.
+const gotLock = ElectronApp.requestSingleInstanceLock();
+if (!gotLock) {
+  ElectronApp.quit();
+} else {
+  ElectronApp.on("second-instance", () => {
+    const win = BrowserWindow.getAllWindows()[0];
+    if (win) {
+      if (win.isMinimized()) win.restore();
+      win.focus();
+    }
+  });
+  new Application();
+}

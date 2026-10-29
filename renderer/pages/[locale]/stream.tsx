@@ -594,6 +594,8 @@ function Stream() {
     };
     window.addEventListener("mousemove", mouseEvent);
     window.addEventListener("mousedown", mouseEvent);
+    window.addEventListener("keydown", mouseEvent);
+    window.addEventListener("mousedown", mouseEvent);
 
     window.addEventListener("touchstart", mouseEvent);
     window.addEventListener("touchmove", mouseEvent);
@@ -606,6 +608,15 @@ function Stream() {
     window.addEventListener('keydown', escEvent)
 
     const mouseInterval = setInterval(() => {
+      // controller users have no mouse: View+Menu (select+start) summons the bar
+      try {
+        const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+        for (const p of pads) {
+          if (!p || !p.buttons) continue;
+          const combo = !!(p.buttons[8] && p.buttons[8].pressed && p.buttons[9] && p.buttons[9].pressed);
+          if (combo) lastMovement = Date.now();
+        }
+      } catch { /* gamepad API unavailable */ }
       if (Date.now() - lastMovement >= 5000) {
         setShowActionbar(false)
       } else {
@@ -1060,6 +1071,8 @@ function Stream() {
       if (mouseInterval) clearInterval(mouseInterval);
 
       window.removeEventListener("mousemove", mouseEvent);
+      window.removeEventListener("mousedown", mouseEvent);
+      window.removeEventListener("keydown", mouseEvent);
       window.removeEventListener("mousedown", mouseEvent);
       window.removeEventListener('keydown', escEvent)
     };

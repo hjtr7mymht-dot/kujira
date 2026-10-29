@@ -1188,10 +1188,10 @@ void main() {
   #kujira-canvas { position: fixed; z-index: 2147483000; pointer-events: none; background: #000; }
   #kujira-amb { position: fixed; inset: 0; z-index: 2147482999; pointer-events: none;
     filter: blur(70px) saturate(1.5) brightness(1.15); transform: scale(1.1); }
-  #kujira-hud { position: fixed; top: 12px; left: 12px; z-index: 2147483100; pointer-events: none;
+  #kujira-hud { position: fixed; top: 12px; left: 12px; z-index: 51; pointer-events: none;
     font: 12px/1.5 ui-monospace, Menlo, monospace; color: #9fe8ff; background: rgba(5,12,20,.55);
     padding: 6px 10px; border-radius: 8px; white-space: pre; }
-  #kujira-panel { position: fixed; top: 60px; right: 16px; z-index: 2147483200; width: 260px;
+  #kujira-panel { position: fixed; top: 60px; right: 16px; z-index: 50; width: 260px;
     background: rgba(10,18,28,.92); color: #d7e7f3; border: 1px solid rgba(120,180,220,.25);
     border-radius: 12px; padding: 14px; font: 13px/1.6 -apple-system, "PingFang SC", sans-serif;
     backdrop-filter: blur(12px); }
@@ -1282,6 +1282,15 @@ void main() {
         fx.pushFrame(srcEl, ts);
         frameCount++;
         srcFpsCount++;
+        // latency: present fresh frames NOW instead of waiting up to one rAF
+        // (interp mode keeps rAF pacing — its timeline must stay monotonic)
+        if (cfg.enabled && (cfg.mode === 'sharp' || cfg.mode === 'upscale') && canvas.width > 0) {
+          try {
+            fx.render({ mode: cfg.mode, sync: false });
+            lastPresentedFrame = frameCount;
+            srcPassCount++; outFpsCount++;
+          } catch (e) {}
+        }
       }
       if (srcEl) { try { srcEl.requestVideoFrameCallback(onVideoFrame); } catch (e) {} }
     }
@@ -1321,6 +1330,7 @@ void main() {
 
     // ---------- render loop ----------
     let srcFpsCount = 0, outFpsCount = 0, renderMsSum = 0, renderMsN = 0;
+    let interpCount = 0, srcPassCount = 0, lastPresentedFrame = -1;
     let rafCount = 0, screenHz = 60, outSeq = -1, lastOutPhase = -1;
     let renderErrs = 0;
     let lastTestPush = 0;
@@ -1362,7 +1372,10 @@ void main() {
         const p = fx._pair();
         if (p && p.tsB > p.tsA) {
           const period = p.tsB - p.tsA;
-          const delay = period; // one source frame of latency for true 2x pacing
+          // latencyBias: 1.0 = smooth 2x pacing (one frame of latency),
+          // lower = fresher content with a short hold (e.g. 0.5 = half frame).
+          const bias = typeof cfg.latencyBias === 'number' ? Math.min(1, Math.max(0.3, cfg.latencyBias)) : 1;
+          const delay = period * bias;
           const tau = now - delay;
           let aIdx = p.aIdx, bIdx = p.bIdx, tsA = p.tsA, tsB = p.tsB, alpha;
           if (tau <= tsA) { alpha = 0; }
@@ -1372,21 +1385,30 @@ void main() {
           stats.latencyMs = Math.round(delay);
         }
       }
+      // non-interp modes: skip re-presenting an unchanged source frame
+      // (onVideoFrame already presented it immediately — zero rAF wait)
+      const skipDup = srcKind === 'video' && cfg.mode !== 'framegen' && frameCount === lastPresentedFrame;
       let ms;
-      try {
-        ms = fx.render(opts);
-      } catch (err) {
-        renderErrs++;
-        if (renderErrs >= 30) {
-          cfg.enabled = false; saveCfg();
-          hud.textContent = '[Kujira] 渲染异常，已切换兼容模式（原始视频直通）';
-          log('render failover: ' + err);
+      if (!skipDup) {
+        try {
+          ms = fx.render(opts);
+        } catch (err) {
+          renderErrs++;
+          if (renderErrs >= 30) {
+            cfg.enabled = false; saveCfg();
+            hud.textContent = '[Kujira] 渲染异常，已切换兼容模式（原始视频直通）';
+            log('render failover: ' + err);
+          }
+          return;
         }
-        return;
+        renderErrs = 0;
+        lastPresentedFrame = frameCount;
+        // framegen truth meter: count genuinely synthesized frames
+        if (opts.pair && opts.pair.alpha > 0 && opts.pair.alpha < 1 && opts.pair.aIdx !== opts.pair.bIdx) interpCount++;
+        else srcPassCount++;
+        renderMsSum += ms; renderMsN++; outFpsCount++;
+        if (opts.sync) stats.gpuMs = +ms.toFixed(2); // renderMs with gl.finish() = real GPU time
       }
-      renderErrs = 0;
-      renderMsSum += ms; renderMsN++; outFpsCount++;
-      if (opts.sync) stats.gpuMs = +ms.toFixed(2); // renderMs with gl.finish() = real GPU time
 
       // ambilight: cheap low-res copy of the source video
       if (cfg.ambilight && (outFpsCount & 1) === 0) {
@@ -1402,6 +1424,16 @@ void main() {
         stats.srcFps = Math.round(srcFpsCount / dt);
         stats.outFps = Math.round(outFpsCount / dt);
         stats.renderMs = renderMsN ? +(renderMsSum / renderMsN).toFixed(2) : 0;
+        stats.interpFps = Math.round(interpCount / dt);
+        stats.srcPassFps = Math.round(srcPassCount / dt);
+        stats.interpGain = stats.outFps - stats.srcFps;
+        // self-diagnosis: framegen needs display headroom above the source rate
+        stats.noGain = cfg.mode === 'framegen' && screenHz <= Math.max(stats.srcFps, stats.outFps) * 1.1;
+        interpCount = 0; srcPassCount = 0;
+        const net = window.__KUJIRA_NET__;
+        stats.net = (net && Date.now() - net.at < 15000)
+          ? net.local + (net.local !== net.remote ? '→' + net.remote : '') + ' rtt' + net.rtt + 'ms'
+          : '';
         stats.mode = cfg.mode + (cfg.mode === 'framegen' ? ':' + cfg.framegen : '')
           + (cfg.mode === 'upscale' ? ':' + effectiveScaler() : '')
           + ' [' + GPU.vendor + ']';
@@ -1413,7 +1445,11 @@ void main() {
           hud.textContent =
             `Kujira ${VERSION}  ${stats.mode}\n` +
             `src ${stats.srcFps}fps -> out ${stats.outFps}fps  ${canvas.width}x${canvas.height}@${screenHz}Hz\n` +
-            `render ${stats.renderMs}ms  gpu ${stats.gpuMs}ms  latency +${stats.latencyMs}ms`;
+            `render ${stats.renderMs}ms  gpu ${stats.gpuMs}ms  latency +${stats.latencyMs}ms\n` +
+            (stats.noGain
+              ? `\u26a0\u63d2\u5e27\u65e0\u589e\u76ca\uff1a\u663e\u793a ${screenHz}Hz \u2264 \u6e90 ${stats.srcFps}fps\uff08\u9ad8\u5237\u65b0\u4f1a\u8bdd/\u7269\u7406\u5c4f\u4e0b\u751f\u6548\uff09`
+              : `interp ${stats.interpFps}/s  gain +${stats.interpGain}/s`) +
+            `  src-pass ${stats.srcPassFps}/s` + (stats.net ? '  net ' + stats.net : '');
         } else {
           hud.style.display = 'none';
         }

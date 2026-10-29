@@ -42,17 +42,53 @@
       // merge: keep originals first, append relay candidates
       cfg.iceServers = own.concat(extra);
       console.log('[KUJIRA-TURN] ICE config: ' + own.length + ' native + ' + extra.length + ' TURN relay servers');
-      return new Orig(cfg, ...rest);
+      const pc = new Orig(cfg, ...rest); kujiraWatchNet(pc); return pc;
     } catch (e) {
       // fail-safe: bad TURN config must NEVER break the stream
       console.error('[KUJIRA-TURN] injected config rejected (' + e.name + '), falling back to native ICE');
-      return new Orig(config, ...rest);
+      const pc = new Orig(config, ...rest); kujiraWatchNet(pc); return pc;
     }
   }
   KujiraPeerConnection.prototype = Orig.prototype;
   if (Orig.generateCertificate) {
     KujiraPeerConnection.generateCertificate = Orig.generateCertificate.bind(Orig);
   }
+  // network visibility: report the selected candidate pair so relay/accelerator
+  // paths are observable (window.__KUJIRA_NET__ -> HUD "net" line)
+  const kujiraReportNet = async (pc) => {
+    try {
+      const s = await pc.getStats();
+      let pair = null;
+      s.forEach((r) => { if (r.type === 'candidate-pair' && r.state === 'succeeded' && r.nominated) pair = r; });
+      if (pair) {
+        const lo = s.get(pair.localCandidateId) || {};
+        const ro = s.get(pair.remoteCandidateId) || {};
+        window.__KUJIRA_NET__ = {
+          local: lo.candidateType || '?',
+          remote: ro.candidateType || '?',
+          rtt: pair.currentRoundTripTime ? Math.round(pair.currentRoundTripTime * 1000) : 0,
+          at: Date.now(),
+        };
+      }
+    } catch (e) {}
+  };
+  const kujiraWatchNet = (pc) => {
+    const start = () => {
+      if (pc.__kujiraNetTimer) return;
+      kujiraReportNet(pc);
+      pc.__kujiraNetTimer = setInterval(() => {
+        if (pc.connectionState === 'closed' || pc.connectionState === 'failed') {
+          clearInterval(pc.__kujiraNetTimer); pc.__kujiraNetTimer = null; return;
+        }
+        kujiraReportNet(pc);
+      }, 5000);
+    };
+    pc.addEventListener('connectionstatechange', () => {
+      if (pc.connectionState === 'connected') start();
+    });
+    if (pc.connectionState === 'connected') start();
+  };
+
   Object.defineProperty(KujiraPeerConnection, 'name', { value: 'RTCPeerConnection' });
   window.RTCPeerConnection = KujiraPeerConnection;
 
