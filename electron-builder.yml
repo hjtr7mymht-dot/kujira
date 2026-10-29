@@ -54,6 +54,8 @@ nsis:
 # Linux configuration
 linux:
   category: Game
+  # .deb requires a maintainer; package.json author has no email
+  maintainer: "Kujira Project <kujira@users.noreply.github.com>"
   target:
     - "AppImage"
     - "deb"
