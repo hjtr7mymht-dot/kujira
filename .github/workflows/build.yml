@@ -52,6 +52,10 @@ jobs:
 
       - name: Build renderer and main
         shell: bash
+        # nextron's internal electron-builder initializes the GitHub publisher
+        # (the yml carries a publish section) and throws without GH_TOKEN on CI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -o pipefail
           npm run build 2>&1 | tee build.log || {
