@@ -1,193 +1,80 @@
-name: Build/release
+name: build
 
-on: 
+on:
   push:
-    tags:
-      - v*
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  tests:
-    name: Run tests
-    runs-on: ubuntu-latest
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            args: --win --x64
+            artifact: kujira-win-x64
+          - os: macos-latest
+            args: --mac --universal
+            artifact: kujira-mac-universal
+          - os: ubuntu-latest
+            args: --linux
+            artifact: kujira-linux
+    runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout Git repository
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v4.0.2
-        with:
-          node-version: 18
-      
-      - name: Set up node_modules cache
-        uses: actions/cache@v4
-        continue-on-error: false
-        with:
-          path: |
-            node_modules/
-          key: ${{ runner.os }}-${{ runner.arch }}-npm-${{ hashFiles('**/package.json') }}-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: ${{ runner.os }}-${{ runner.arch }}-npm-
-
-      - name: Install yarn dependencies
-        run: yarn
-
-  cachedeps:
-    name: Generate cached sources
-    runs-on: ubuntu-latest
-    needs: ['tests']
-
-    steps:
-      # Intsall node tools
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          repository: 'flatpak/flatpak-builder-tools'
+          node-version: 22
+          cache: npm
 
-      - name: Install Python deps
-        run: pip3 install aiohttp toml
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Install flatpak-builder-tools
-        run: pipx install ./node/
+      - name: Build renderer and main
+        run: npm run build
 
-      # Generate sources
-      - name: Checkout Git repository
-        uses: actions/checkout@v4
+      - name: Package with electron-builder
+        run: npx electron-builder ${{ matrix.args }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
         with:
-          submodules: recursive
-          # clean: true
-
-      - name: Prep artifacts dir
-        run: mkdir ./deps-dist/
-
-      - name: Build yarn cache
-        run: flatpak-node-generator yarn yarn.lock -o ./deps-dist/yarn-sources.json
-
-      - uses: actions/upload-artifact@master
-        with:
-          name: flatpak-sources
-          path: ./deps-dist/
-
-  flatpak:
-    name: Flatpak Build
-    runs-on: ubuntu-latest
-    needs: [cachedeps]
-
-    container:
-      image: bilelmoussaoui/flatpak-github-actions:gnome-45
-      options: --privileged
-
-    steps:
-      - name: Checkout Git repository
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - uses: actions/download-artifact@master
-        with:
-          name: flatpak-sources
-          path: flatpak/
-
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v4.0.2
-        with:
-          node-version: 18
-
-      - name: Set up flatpak build cache
-        uses: actions/cache@v4
-        continue-on-error: false
-        with:
+          name: ${{ matrix.artifact }}
+          if-no-files-found: error
           path: |
-            build/
-            .flatpak-builder/
-            flatpak-node/
-          key: ${{ runner.os }}-${{ runner.arch }}-flatpak-builder-${{ hashFiles('flatpak/*') }}
-          restore-keys: ${{ runner.os }}-${{ runner.arch }}-flatpak-builder-
-
-      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
-        with:
-          bundle: XStreamingDesktop.flatpak
-          manifest-path: flatpak/io.github.Geocld.XStreamingDesktop.yml
-          cache-key: flatpak-builder-${{ github.sha }}
-
-      - name: Release flatpak
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/v')
-        with:
-          files: XStreamingDesktop.flatpak
-          draft: true
+            dist/**/*.exe
+            dist/**/*.zip
+            dist/**/*.dmg
+            dist/**/*.AppImage
+            dist/**/*.deb
+            dist/**/latest*.yml
+            !dist/**/*.blockmap
 
   release:
-    name: Build/release Electron app
-    runs-on: ${{ matrix.os }}
-    needs: ['tests']
-
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
-
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout Git repository
-        uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
-          submodules: recursive
+          path: artifacts
+          merge-multiple: true
 
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v4.0.2
+      - uses: softprops/action-gh-release@v2
         with:
-          node-version: 18
-
-      - name: Set up node_modules cache
-        uses: actions/cache@v4
-        continue-on-error: false
-        with:
-          path: |
-            node_modules/
-          key: ${{ runner.os }}-${{ runner.arch }}-npm-${{ hashFiles('**/package.json') }}-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: ${{ runner.os }}-${{ runner.arch }}-npm-
-
-      - name: Install yarn dependencies
-        run: yarn
-
-      - name: Build/release Electron app
-        uses: samuelmeuli/action-electron-builder@v1.6.0
-        with:
-          # GitHub token, automatically provided to the action
-          # (No need to define this secret in the repo settings)
-          github_token: ${{ secrets.github_token }}
-
-          # If the commit is tagged with a version (e.g. "v1.0.0"),
-          # release the app after building
-          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        # if: startsWith(github.ref, 'refs/tags/v') 
-
-      - name: Publish Linux AppImage
-        uses: actions/upload-artifact@v4
-        with:
-          name: XStreaming-linux.AppImage
-          path: |
-            dist/*.AppImage
-        if: matrix.os == 'ubuntu-latest' && contains(github.event.head_commit.message, '[build]')
-
-      - name: Publish Linux DEB
-        uses: actions/upload-artifact@v4
-        with:
-          name: XStreaming-linux.deb
-          path: |
-            dist/*.deb
-        if: matrix.os == 'ubuntu-latest' && contains(github.event.head_commit.message, '[build]')
-
-      - name: Publish Mac DMG
-        uses: actions/upload-artifact@v4
-        with:
-          name: XStreaming-macos.dmg
-          path: |
-            dist/*.dmg
-        if: matrix.os == 'macos-latest' && contains(github.event.head_commit.message, '[build]')
-
-      - name: Publish Windows EXE
-        uses: actions/upload-artifact@v4
-        with:
-          name: XStreaming-win.zip
-          path: |
-            dist/*.exe
-        if: matrix.os == 'windows-latest' && contains(github.event.head_commit.message, '[build]')
+          generate_release_notes: true
+          files: |
+            artifacts/**/*.exe
+            artifacts/**/*.zip
+            artifacts/**/*.dmg
+            artifacts/**/*.AppImage
+            artifacts/**/*.deb
+            artifacts/**/latest*.yml
