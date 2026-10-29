@@ -1349,10 +1349,16 @@ void main() {
       if (srcKind === 'video') srcEl.style.opacity = '0';
       layout();
       rafCount++;
-      // output refresh tier: emit at most cfg.outputHz frames per display second
-      if (typeof cfg.outputHz === 'number' && cfg.outputHz > 0 && screenHz > 0) {
+      // output refresh tier: emit at most N frames per display second.
+      // With uncapped vsync (disable-gpu-vsync) rAF measures thousands of Hz —
+      // pace to the configured tier, or the 180 tier by default, instead of
+      // letting the render loop free-spin.
+      const targetHz = (typeof cfg.outputHz === 'number' && cfg.outputHz > 0)
+        ? cfg.outputHz
+        : (screenHz > 400 ? 180 : screenHz);
+      if (targetHz > 0 && screenHz > 0) {
         outSeq++;
-        const phase = Math.floor((outSeq + 1) * cfg.outputHz / screenHz);
+        const phase = Math.floor((outSeq + 1) * targetHz / screenHz);
         if (phase === lastOutPhase) return;
         lastOutPhase = phase;
       }
@@ -1427,8 +1433,10 @@ void main() {
         stats.interpFps = Math.round(interpCount / dt);
         stats.srcPassFps = Math.round(srcPassCount / dt);
         stats.interpGain = stats.outFps - stats.srcFps;
-        // self-diagnosis: framegen needs display headroom above the source rate
-        stats.noGain = cfg.mode === 'framegen' && screenHz <= Math.max(stats.srcFps, stats.outFps) * 1.1;
+        // self-diagnosis: warn only when interpolation is ACTUALLY producing
+        // nothing (gain ~0) — comparing against display Hz alone false-positives
+        // whenever outFps legitimately equals screenHz with real synthesized frames
+        stats.noGain = cfg.mode === 'framegen' && stats.interpGain <= 3 && screenHz <= stats.srcFps * 1.15;
         interpCount = 0; srcPassCount = 0;
         const net = window.__KUJIRA_NET__;
         stats.net = (net && Date.now() - net.at < 15000)

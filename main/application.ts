@@ -10,6 +10,12 @@ import { defaultSettings } from '../renderer/context/userContext.defaults'
 import DiscordRpcHelper from './helpers/discordrpc'
 
 import xboxWebApi from "xbox-webapi";
+
+// Kujira: Chromium's vsync scheduler caps some Windows high-refresh laptops
+// (e.g. 2560x1440@180) at 60Hz rAF. Run the compositor uncapped and let the
+// postfx engine's output tier (auto 180) pace frame emission.
+ElectronApp.commandLine.appendSwitch("disable-gpu-vsync");
+ElectronApp.commandLine.appendSwitch("disable-frame-rate-limit");
 import xCloudApi from "./helpers/xcloudapi";
 
 import pkg from "../package.json";
