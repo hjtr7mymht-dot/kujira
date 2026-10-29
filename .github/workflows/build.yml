@@ -34,7 +34,9 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        # same resolution mode as local dev — HeroUI's peer range conflicts
+        # trip npm ci's strict ERESOLVE check on a clean tree
+        run: npm install --legacy-peer-deps
 
       - name: Build renderer and main
         run: npm run build
