@@ -22,7 +22,19 @@ macOS / Windows 双平台，支持 Xbox Remote Play（主机串流）与 xCloud�
 
 ```bash
 npm install        # 国内建议加 --registry=https://registry.npmmirror.com
-npm run build      # 产物在 dist/
+npm run build      # 当前平台产物在 dist/
+```
+
+Windows 包（可在 mac/Linux 上交叉出包，原生手柄模块自带全平台预编译）：
+
+```bash
+npx electron-builder --win --x64   # dist/ 下出 nsis 安装包 + zip 绿色包
+```
+
+Linux 包：
+
+```bash
+npx electron-builder --linux       # AppImage + deb
 ```
 
 ## 赞助支持

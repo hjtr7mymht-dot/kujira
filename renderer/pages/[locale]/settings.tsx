@@ -44,6 +44,7 @@ const CAT_META: Record<string, [string, string]> = {
   "XHome": [t("Xhome"), "主机远程串流"],
   "Xcloud": [t("Xcloud"), "云游戏"],
   "Others": [t("Others"), "测试、重置与维护"],
+  "Sponsor": ["赞助支持", "请开发者喝杯奶茶"],
 };
   const { settings: localSettings, setSettings: setLocalSettings, resetSettings } = useSettings();
   const router = useRouter();
@@ -226,6 +227,7 @@ const CAT_META: Record<string, [string, string]> = {
               ["XHome", t("Xhome")],
               ["Xcloud", t("Xcloud")],
               ["Others", t("Others")],
+              ["Sponsor", "赞助支持"],
             ].map(([key, label]) => (
               <button
                 key={key}
@@ -385,6 +387,27 @@ const CAT_META: Record<string, [string, string]> = {
               </>
             )}
 
+            {cat === "Sponsor" && (
+              <Card>
+                <CardBody className="px-6 py-6">
+                  <div className="text-lg font-semibold">赞助支持</div>
+                  <div className="text-sm text-default-500 mt-1 mb-5">
+                    如果 Kujira 帮到了你，可以请开发者喝杯奶茶（自愿，不影响任何功能）
+                  </div>
+                  <div className="flex gap-8">
+                    <div className="flex flex-col items-center gap-3">
+                      <img src="/images/donate-alipay.png" alt="支付宝赞助码" className="w-64 rounded-xl border border-divider" />
+                      <span className="text-sm text-default-500">支付宝</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-3">
+                      <img src="/images/donate-wechat.png" alt="微信支付赞助码" className="w-64 rounded-xl border border-divider" />
+                      <span className="text-sm text-default-500">微信支付</span>
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+            )}
+
             {cat === "Others" && (
               <>
             <Card className="setting-item">
@@ -437,25 +460,6 @@ const CAT_META: Record<string, [string, string]> = {
                 >
                   {t("Check")}
                 </Button>
-              </CardBody>
-            </Card>
-
-            <Card className="setting-item">
-              <CardBody>
-                <div className="setting-title">赞助支持</div>
-                <div className="setting-description">
-                  如果 Kujira 帮到了你，可以请开发者喝杯奶茶（自愿，不影响任何功能）
-                </div>
-                <div className="flex gap-5 pt-1">
-                  <div className="flex flex-col items-center gap-2">
-                    <img src="/images/donate-alipay.png" alt="支付宝赞助码" className="w-48 rounded-lg border border-divider" />
-                    <span className="text-xs text-default-500">支付宝</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                    <img src="/images/donate-wechat.png" alt="微信支付赞助码" className="w-48 rounded-lg border border-divider" />
-                    <span className="text-xs text-default-500">微信支付</span>
-                  </div>
-                </div>
               </CardBody>
             </Card>
 

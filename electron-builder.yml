@@ -6,6 +6,9 @@ directories:
   output: dist
   buildResources: resources
 
+# native deps (node-hid, peasyo-sdl-lib) ship multi-platform prebuilds in-package
+npmRebuild: false
+
 files:
   - from: .
     filter:
@@ -36,7 +39,8 @@ dmg:
 
 # Windows configuration
 win:
-  # icon: "src/app/assets/images/icon.ico"
+  icon: "resources/icon.ico"
+  artifactName: "${productName}-${version}-win-${arch}.${ext}"
   target:
     - "zip"
     - "nsis"
@@ -45,6 +49,7 @@ win:
 nsis:
   oneClick: true
   perMachine: true
+  artifactName: "${productName}-${version}-win-${arch}-setup.${ext}"
 
 # Linux configuration
 linux:
