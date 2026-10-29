@@ -200,7 +200,7 @@ function Stream() {
     number | undefined
   >(undefined);
   const [systemKeyboardInputScope, setSystemKeyboardInputScope] = useState(0);
-  const [showActionbar, setShowActionbar] = useState(false);
+  const [, setShowActionbar] = useState(false); // value unused: menu button is persistent now
   const [volume, setVolume] = useState(1);
   const [openMicro, setOpenMicro] = useState(false);
   const [streamingType, setStreamingType] = useState('');
@@ -607,14 +607,20 @@ function Stream() {
     }
     window.addEventListener('keydown', escEvent)
 
+    let padComboDown = false;
     const mouseInterval = setInterval(() => {
-      // controller users have no mouse: View+Menu (select+start) summons the bar
+      // controller users: View+Menu (select+start) opens the menu directly
       try {
         const pads = navigator.getGamepads ? navigator.getGamepads() : [];
         for (const p of pads) {
           if (!p || !p.buttons) continue;
           const combo = !!(p.buttons[8] && p.buttons[8].pressed && p.buttons[9] && p.buttons[9].pressed);
-          if (combo) lastMovement = Date.now();
+          if (combo && !padComboDown) {
+            padComboDown = true;
+            const btn = document.querySelector("#actionBar button");
+            if (btn) (btn as HTMLElement).click();
+          }
+          if (!combo) padComboDown = false;
         }
       } catch { /* gamepad API unavailable */ }
       if (Date.now() - lastMovement >= 5000) {
@@ -1272,7 +1278,7 @@ function Stream() {
   return (
     <>
       {
-        showActionbar && (
+        (
           <ActionBar
             connectState={connectState}
             type={streamingType}

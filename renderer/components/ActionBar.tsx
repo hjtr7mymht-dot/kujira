@@ -78,10 +78,23 @@ function ActionBar(props) {
       <Button
         variant="bordered"
         size="sm"
-        style={{ color: '#fff' }}
+        aria-label="Menu"
+        style={{
+          color: '#cfe8ff',
+          width: 48,
+          height: 48,
+          minWidth: 48,
+          borderRadius: 24,
+          padding: 0,
+          fontSize: 20,
+          lineHeight: '48px',
+          background: 'rgba(18, 28, 44, 0.55)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(110, 180, 230, 0.35)',
+        }}
         onPress={() => setDrawerOpen(true)}
       >
-        {t("Menu")}
+        ☰
       </Button>
 
       <Drawer isOpen={drawerOpen} onOpenChange={setDrawerOpen} placement="right" size="xs">
