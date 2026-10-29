@@ -16,8 +16,7 @@
     "build": "nextron build",
     "lint": "eslint . --ext .ts && eslint renderer/ --ext .tsx",
     "lint:fix": "eslint . --ext .ts --fix && eslint renderer/ --ext .tsx --fix",
-    "postinstall": "electron-builder install-app-deps",
-    "publish": "electron-builder -p onTag",
+      "publish": "electron-builder -p onTag",
     "flatpak-build": "nextron build --no-pack && electron-builder --dir"
   },
   "dependencies": {
