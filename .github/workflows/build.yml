@@ -33,10 +33,22 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Linux native-dep headers (node-hid source-build fallback)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libusb-1.0-0-dev libudev-dev
+
       - name: Install dependencies
         # same resolution mode as local dev — HeroUI's peer range conflicts
         # trip npm ci's strict ERESOLVE check on a clean tree
         run: npm install --legacy-peer-deps
+
+      - name: Dump npm diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          echo '## npm install diagnostics' >> "$GITHUB_STEP_SUMMARY"
+          echo 'node: ' $(node -v) ' npm: ' $(npm -v) >> "$GITHUB_STEP_SUMMARY"
+          ls -t ~/.npm/_logs/*.log 2>/dev/null | head -1 | xargs -I{} tail -60 {} >> "$GITHUB_STEP_SUMMARY" || echo 'no npm logs' >> "$GITHUB_STEP_SUMMARY" 
 
       - name: Build renderer and main
         run: npm run build
