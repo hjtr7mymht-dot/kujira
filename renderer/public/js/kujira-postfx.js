@@ -1330,7 +1330,7 @@ void main() {
 
     // ---------- render loop ----------
     let srcFpsCount = 0, outFpsCount = 0, renderMsSum = 0, renderMsN = 0;
-    let interpCount = 0, srcPassCount = 0, lastPresentedFrame = -1;
+    let interpCount = 0, srcPassCount = 0, lastPresentedFrame = -1, lastEmitAt = 0;
     let rafCount = 0, screenHz = 60, outSeq = -1, lastOutPhase = -1;
     let renderErrs = 0;
     let lastTestPush = 0;
@@ -1345,23 +1345,24 @@ void main() {
         if (srcEl && srcKind === 'video') srcEl.style.opacity = '1';
         return;
       }
-      canvas.style.display = 'block';
+      rafCount++;
+      // output rate cap FIRST — skipped ticks must exit before any layout,
+      // style writes or GL work (the loop spins at thousands of Hz when
+      // vsync is unlocked, and per-tick layout thrash is what stuttered).
+      // cfg.outputHz may be a string from the settings select: parse it.
+      const manualHz = parseInt(cfg.outputHz, 10);
+      const targetHz = Math.min(240, Math.max(30,
+        (Number.isFinite(manualHz) && manualHz > 0) ? manualHz : (screenHz > 400 ? 180 : screenHz)));
+      stats.capHz = targetHz;
+      // time-based pacing: immune to stale loop-rate measurement (phase math
+      // could overrun the cap while screenHz lagged behind)
+      const minGap = 1000 / targetHz - 1.5;
+      if (now - lastEmitAt < minGap) return;
+      lastEmitAt = now;
+
+      if (canvas.style.display !== 'block') canvas.style.display = 'block';
       if (srcKind === 'video') srcEl.style.opacity = '0';
       layout();
-      rafCount++;
-      // output refresh tier: emit at most N frames per display second.
-      // With uncapped vsync (disable-gpu-vsync) rAF measures thousands of Hz —
-      // pace to the configured tier, or the 180 tier by default, instead of
-      // letting the render loop free-spin.
-      const targetHz = (typeof cfg.outputHz === 'number' && cfg.outputHz > 0)
-        ? cfg.outputHz
-        : (screenHz > 400 ? 180 : screenHz);
-      if (targetHz > 0 && screenHz > 0) {
-        outSeq++;
-        const phase = Math.floor((outSeq + 1) * targetHz / screenHz);
-        if (phase === lastOutPhase) return;
-        lastOutPhase = phase;
-      }
 
       // test/canvas source: push ~60fps worth of frames (skip duplicate display ticks)
       if (srcKind === 'test') {
@@ -1452,7 +1453,7 @@ void main() {
           hud.style.display = 'block';
           hud.textContent =
             `Kujira ${VERSION}  ${stats.mode}\n` +
-            `src ${stats.srcFps}fps -> out ${stats.outFps}fps  ${canvas.width}x${canvas.height}@${screenHz}Hz\n` +
+            `src ${stats.srcFps}fps -> out ${stats.outFps}fps  ${canvas.width}x${canvas.height} loop ${screenHz}Hz cap ${stats.capHz || targetHz}\n` +
             `render ${stats.renderMs}ms  gpu ${stats.gpuMs}ms  latency +${stats.latencyMs}ms\n` +
             (stats.noGain
               ? `\u26a0\u63d2\u5e27\u65e0\u589e\u76ca\uff1a\u663e\u793a ${screenHz}Hz \u2264 \u6e90 ${stats.srcFps}fps\uff08\u9ad8\u5237\u65b0\u4f1a\u8bdd/\u7269\u7406\u5c4f\u4e0b\u751f\u6548\uff09`

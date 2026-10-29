@@ -14,6 +14,20 @@ import xboxWebApi from "xbox-webapi";
 // Kujira: Chromium's vsync scheduler caps some Windows high-refresh laptops
 // (e.g. 2560x1440@180) at 60Hz rAF. Run the compositor uncapped and let the
 // postfx engine's output tier (auto 180) pace frame emission.
+// High-refresh unlock: these two switches must be on the OS command line —
+// app.commandLine.appendSwitch does NOT reach the GPU process for them
+// (measured: rAF stayed 60 with appendSwitch, 2958 with CLI flags). So the
+// app re-executes itself once with the flags appended; --kujira-relaunched
+// guards against a relaunch loop. The user's frame cap is enforced by the
+// postfx engine output tier (30..240), never by driver caps.
+const KUJIRA_GPU_FLAGS = ["--disable-gpu-vsync", "--disable-frame-rate-limit"];
+const kujiraHasFlags = KUJIRA_GPU_FLAGS.every((f) => process.argv.includes(f));
+if (!kujiraHasFlags && !process.argv.includes("--kujira-relaunched")) {
+  ElectronApp.relaunch({
+    args: [...process.argv.slice(1), ...KUJIRA_GPU_FLAGS, "--kujira-relaunched"],
+  });
+  ElectronApp.exit(0);
+}
 ElectronApp.commandLine.appendSwitch("disable-gpu-vsync");
 ElectronApp.commandLine.appendSwitch("disable-frame-rate-limit");
 import xCloudApi from "./helpers/xcloudapi";
